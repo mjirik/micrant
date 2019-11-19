@@ -21,10 +21,12 @@ import datetime
 from pathlib import Path
 import io3d.misc
 from io3d import cachefile
+import micrant
 import json
 import time
 import platform
 from typing import List, Union
+import exsu
 
 from pyqtgraph.parametertree import Parameter, ParameterTree
 import pyqtgraph.widgets
@@ -200,7 +202,7 @@ class MicrAnt:
 
         # timestamp = datetime.datetime.now().strftime("SA_%Y-%m-%d_%H:%M:%S")
         # timestamp = datetime.datetime.now().strftime("SA_%Y%m%d_%H%M%S")
-        default_dir = op.join(default_dir, "SA_data.xlsx")
+        default_dir = op.join(default_dir, "micrant_data.xlsx")
         return default_dir
 
     def _get_file_info(self):
@@ -226,6 +228,80 @@ class MicrAnt:
             filter="NanoZoomer Digital Pathology Image(*.ndpi)",
         )
         self.set_input_file(fn)
+
+    def set_annotation_color_selection(self, color:str):
+        logger.debug(f"color={color}")
+        pcolor = self.parameters.param("Input", "Annotation Color")
+        color = color.upper()
+        color_name = color.lower()
+        color_name = color_name.capitalize()
+        color_names = dict(zip(*pcolor.reverse[::-1]))
+        if color_name in color_names:
+            color = color_names[color_name]
+
+        # rewrite name to code
+        if color in pcolor.reverse[0]:
+            # val = pcolor.reverse[0].index(color)
+            # pcolor.setValue(val)
+            logger.debug(f"setting color parameter to {color}")
+            pcolor.setValue(color)
+        else:
+            raise ValueError("Color '{}' not found in allowed colors.".format(color))
+
+    def set_input_file(self, fn:Union[Path, str]):
+        fn = str(fn)
+        fnparam = self.parameters.param("Input", "File Path")
+        fnparam.setValue(fn)
+        logger.debug("Set Input File Path to : {}".format(fn))
+        self.add_ndpi_file(fn)
+
+    def add_ndpi_file(self, filename:str):
+        self.anim = image.AnnotatedImage(filename)
+        fnparam = self.parameters.param("Output", "Directory Path")
+        self.report.init_with_output_dir(fnparam.value())
+        logger.debug(f"report output dir: {self.report.outputdir}")
+        fn_spreadsheet = self.parameters.param("Output", "Common Spreadsheet File")
+        self.report.additional_spreadsheet_fn = str(fn_spreadsheet.value())
+
+        pcolor = self.parameters.param("Input", "Annotation Color")
+        color = pcolor.value()
+        annotation_ids = self.anim.select_annotations_by_color(
+                color,
+                raise_exception_if_not_found=self.raise_exception_if_color_not_found)
+
+        for annotation_id in annotation_ids:
+            datarow = {}
+            datarow["Annotation ID"] = annotation_id
+            numeric_id = self.anim.get_annotation_id(annotation_id)
+
+            # self.anim.annotations.
+            inpath = Path(self.parameters.param("Input", "File Path").value())
+            fn = inpath.parts[-1]
+            fn_out = (self.parameters.param("Output", "Directory Path").value())
+            self.report.add_cols_to_actual_row(
+                {
+                    "File Name": str(fn),
+                    "File Path": str(inpath),
+                    "Annotation Color": self.parameters.param("Input", "Annotation Color").value(),
+                    "Datetime": datetime.datetime.now().isoformat(' ', 'seconds'),
+                    "platform.system": platform.uname().system,
+                    "platform.node": platform.uname().node,
+                    "platform.processor": platform.uname().processor,
+                    "MicrAnt Version": micrant.__version__,
+                    "Output Directory Path": str(fn_out)
+                })
+            # self.report.add_cols_to_actual_row(self.parameters_to_dict())
+
+            datarow["Annotation Title"] = self.anim.annotations[numeric_id]["title"]  # [self.annotation_id]
+            datarow["Annotation Details"] = self.anim.annotations[numeric_id]["details"]  # [self.annotation_id]
+            self.report.add_cols_to_actual_row(datarow)
+            self.report.finish_actual_row()
+
+        common_spreadsheet_file = self.parameters.param("Output", "Common Spreadsheet File").value()
+        excel_path = Path(common_spreadsheet_file)
+        # print("we will write to excel", excel_path)
+        filename = str(excel_path)
+        exsu.report.append_df_to_excel(filename, self.report.df)
 
     def select_output_dir_gui(self):
         from PyQt5 import QtWidgets
@@ -263,6 +339,11 @@ class MicrAnt:
         # print (fn)
         self.set_common_spreadsheet_file(fn)
 
+    def set_common_spreadsheet_file(self, path):
+        fnparam = self.parameters.param("Output", "Common Spreadsheet File")
+        fnparam.setValue(path)
+        self.cache.update('common_spreadsheet_file', path)
+        logger.info("common_spreadsheet_file set to {}".format(path))
 
     def start_gui(self, skip_exec=False, qapp=None):
 
@@ -294,7 +375,7 @@ class MicrAnt:
 
         # print("run scaffan")
         win = QtGui.QWidget()
-        win.setWindowTitle("ScaffAn {}".format(scaffan.__version__))
+        win.setWindowTitle("MicrAnt {}".format(micrant.__version__))
         logo_fn = op.join(op.dirname(__file__), "scaffan_icon256.png")
         app_icon = QtGui.QIcon()
         # app_icon.addFile(logo_fn, QtCore.QSize(16, 16))
