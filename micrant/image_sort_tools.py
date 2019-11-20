@@ -1,3 +1,4 @@
+from loguru import logger
 import scaffan
 import scaffan.image
 import pandas as pd
@@ -18,6 +19,7 @@ def get_parameter_from_df(df, colname):
     return df_all_with_param
 
 def get_image_from_ann_id(anim, ann_id):
+    logger.debug(f"ann_id={ann_id}, type={type(ann_id)}")
     outer_ids = anim.select_outer_annotations(ann_id)
     if len(outer_ids) == 0:
         view_ann_id = ann_id
@@ -44,8 +46,6 @@ def generate_images(unique_df):
         prev_pth = pth
         yield row, img
 
-
-import copy
 
 
 def generate_image_couples(unique_df):

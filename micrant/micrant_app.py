@@ -4,10 +4,6 @@
 Modul is used for GUI of Lisa
 """
 import os.path as op
-import sys
-path_to_script = op.dirname(op.abspath(__file__))
-pth = op.join(path_to_script, "../../scaffan/")
-sys.path.insert(0, pth)
 
 from loguru import logger
 
@@ -38,6 +34,7 @@ import pandas as pd
 
 from pyqtgraph.parametertree import Parameter, ParameterTree
 import pyqtgraph.widgets
+from . import image_sort_tools as imst
 
 class MicrAnt:
     def __init__(self):
@@ -205,6 +202,7 @@ class MicrAnt:
         self.anim: image.AnnotatedImage = None
         self.image1 = None
         self.image2 = None
+        self.comparison_iterator = None
         pass
 
     def set_parameter(self, param_path, value, parse_path=True):
@@ -395,9 +393,32 @@ class MicrAnt:
         # self.image2.setPixmap(QtGui.QPixmap(logo_fn).scaled(100, 100))
         # self.image2.show()
 
+    def init_comparison(self):
+        xfn = self.parameters.param("Output", "Common Spreadsheet File").value()
+        colname = self.parameters.param("Processing", "Annotated Parameter").value()
+        logger.debug(f"common spreadsheet file = {xfn}")
+        logger.debug(f"Annotated Parameter = {colname}")
+        df = pd.read_excel(xfn)
+        unique_df = df.drop_duplicates(subset=["File Name", "Annotation ID"], keep="first")
+        # unique_df.keys()
+        df_all_with_param = imst.get_parameter_from_df(unique_df, colname)
+        self.comparison_iterator = imst.generate_image_couples(df_all_with_param)
+
     def gui_next_image(self):
-        img = np.random.random([10,10])
-        self.image1.imshow(img)
+        if self.comparison_iterator is None:
+            self.init_comparison()
+
+        try:
+
+            # get the next item
+
+            row, img, prev_row, prev_img = next(self.comparison_iterator)
+            self.image1.imshow(img)
+            self.image2.imshow(prev_img)
+            # do something with element
+        except StopIteration:
+            self.comparison_iterator = None
+            # if StopIteration is raised, break from loop
 
     def run(self):
 
@@ -475,7 +496,7 @@ class MicrAnt:
         # layout.addWidget(t2, 1, 1, 1, 1)
 
         win.show()
-        win.resize(300, 800)
+        win.resize(1600, 800)
         self.win = win
         # win.
         if not skip_exec:
