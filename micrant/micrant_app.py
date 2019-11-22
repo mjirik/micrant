@@ -42,13 +42,11 @@ class MicrAnt:
         self.report: Report = Report()
         # self.report.level = 50
 
-        self.raise_exception_if_color_not_found = True
+        self.raise_exception_if_color_not_found = False
+        self.qapp = None
 
-        import scaffan.texture as satex
+        # import scaffan.texture as satex
         # self.glcm_textures = satex.GLCMTextureMeasurement()
-        # self.lobulus_processing = scaffan.lobulus.Lobulus(ptype="bool")
-        # self.skeleton_analysis = scaffan.skeleton_analysis.SkeletonAnalysis()
-        # self.evaluation = scaffan.evaluation.Evaluation()
         # self.slide_segmentation = scaffan.slide_segmentation.ScanSegmentation()
         # self.slide_segmentation.report = self.report
 
@@ -71,12 +69,12 @@ class MicrAnt:
                     {"name": "File Path", "type": "str"},
                     {"name": "Select", "type": "action"},
                     {"name": "Data Info", "type": "str", "readonly": True},
-                    {
-                        "name": "Automatic Lobulus Selection",
-                        "type": "bool",
-                        "value": False,
-                        "tip": "Skip selection based on annotation color and select lobulus based on Scan Segmentation. ",
-                    },
+                    # {
+                    #     "name": "Automatic Lobulus Selection",
+                    #     "type": "bool",
+                    #     "value": False,
+                    #     "tip": "Skip selection based on annotation color and select lobulus based on Scan Segmentation. ",
+                    # },
                     {
                         "name": "Annotation Color",
                         "type": "list",
@@ -130,15 +128,27 @@ class MicrAnt:
                 ],
             },
             {
-                "name": "Processing",
+                "name": "Annotation",
                 "type": "group",
                 "children": [
-                    # {'name': 'Directory Path', 'type': 'str', 'value': prepare_default_output_dir()},
+
                     {
                         "name": "Annotated Parameter",
                         "type": "str",
                         "value": "",
                     },
+                    {
+                        "name": "Threshold",
+                        "type": 'float',
+                        "value": 0
+                    },
+                ]
+            },
+            {
+                "name": "Processing",
+                "type": "group",
+                "children": [
+                    # {'name': 'Directory Path', 'type': 'str', 'value': prepare_default_output_dir()},
                     # {
                     #     "name": "Show",
                     #     "type": "bool",
@@ -182,17 +192,25 @@ class MicrAnt:
                     },
                 ],
             },
-            {"name": "Run", "type": "action"},
-            {"name": "Next", "type": "action"},
+            {"name": "Set Left", "type": "action", "tip": "Set parameter value of left image and show next couple"},
+            {
+                "name": "New Parameter Value",
+                "type": "float",
+                "value": 0,
+                "tip": "Used when Set Left is clicked",
+            },
+            {"name": "Left is higher", "type": "action", "tip": "Annotated parameter on left image is higher than on right image"},
+            {"name": "Right is higher", "type": "action", "tip": "Annotated parameter on right image is higher than on left image"},
+            {"name": "Save", "type": "action"},
             # {"name": "Run", "type": "action"},
-            {'name': 'Numerical Parameter Options', 'type': 'group', 'children': [
-                {'name': 'Units + SI prefix', 'type': 'float', 'value': 1.2e-6, 'step': 1e-6, 'siPrefix': True,
-                 'suffix': 'V'},
-                {'name': 'Limits (min=7;max=15)', 'type': 'int', 'value': 11, 'limits': (7, 15), 'default': -6},
-                {'name': 'DEC stepping', 'type': 'float', 'value': 1.2e6, 'dec': True, 'step': 1, 'siPrefix': True,
-                 'suffix': 'Hz'},
-
-            ]},
+            # {'name': 'Numerical Parameter Options', 'type': 'group', 'children': [
+            #     {'name': 'Units + SI prefix', 'type': 'float', 'value': 1.2e-6, 'step': 1e-6, 'siPrefix': True,
+            #      'suffix': 'V'},
+            #     {'name': 'Limits (min=7;max=15)', 'type': 'int', 'value': 11, 'limits': (7, 15), 'default': -6},
+            #     {'name': 'DEC stepping', 'type': 'float', 'value': 1.2e6, 'dec': True, 'step': 1, 'siPrefix': True,
+            #      'suffix': 'Hz'},
+            #
+            # ]},
         ]
         self.parameters = Parameter.create(name="params", type="group", children=params)
         # here is everything what should work with or without GUI
@@ -247,7 +265,11 @@ class MicrAnt:
         if fnparam.exists() and fnparam.is_file():
             anim = scaffan.image.AnnotatedImage(str(fnparam))
             self.parameters.param("Input", "Data Info").setValue(anim.get_file_info())
+
     def run_lobuluses(self):
+        logger.debug(self.report.df)
+        self._dump_report()
+        # self.report.init()
         pass
 
     def select_file_gui(self):
@@ -258,13 +280,26 @@ class MicrAnt:
         if not op.exists(default_dir):
             default_dir = op.expanduser("~")
 
-        fn, mask = QtWidgets.QFileDialog.getOpenFileName(
-            None,
-            "Select Input File",
+        filter = "NanoZoomer Digital Pathology Image(*.ndpi)"
+        # fn, mask = QtWidgets.QFileDialog.getOpenFileName(
+        #     self.win,
+        #     "Select Input File",
+        #     directory=default_dir,
+        #     filter=filter
+        # )
+
+        # filter = "TXT (*.txt);;PDF (*.pdf)"
+        file_name = QtGui.QFileDialog()
+        file_name.setFileMode(QtGui.QFileDialog.ExistingFiles)
+        names, _ = file_name.getOpenFileNames(
+            self.win,
+            "Select Input Files",
             directory=default_dir,
-            filter="NanoZoomer Digital Pathology Image(*.ndpi)",
+            filter=filter
         )
-        self.set_input_file(fn)
+        print(names)
+        for fn in names:
+            self.set_input_file(fn)
 
     def set_annotation_color_selection(self, color:str):
         logger.debug(f"color={color}")
@@ -309,19 +344,26 @@ class MicrAnt:
         for annotation_id in annotation_ids:
             inpath = Path(self.parameters.param("Input", "File Path").value())
             self.add_std_data_to_row(inpath, annotation_id)
-            self.report.add_cols_to_actual_row({"Annotation Method": "nothing"})
+            numeric_id = self.anim.get_annotation_id(annotation_id)
+            self.report.add_cols_to_actual_row({
+                "Annotation Method": "nothing",
+                "Annotation Title": self.anim.annotations[numeric_id]["title"],  # [self.annotation_id]
+                "Annotation Details": self.anim.annotations[numeric_id]["details"],  # [self.annotation_id]
+            })
             self.report.finish_actual_row()
+        self._dump_report()
 
+    def _dump_report(self):
         common_spreadsheet_file = self.parameters.param("Output", "Common Spreadsheet File").value()
         excel_path = Path(common_spreadsheet_file)
         # print("we will write to excel", excel_path)
         filename = str(excel_path)
         exsu.report.append_df_to_excel(filename, self.report.df)
+        self.report.init()
 
-    def add_std_data_to_row(self, inpath, annotation_id):
+    def add_std_data_to_row(self, inpath:Path, annotation_id):
         datarow = {}
         datarow["Annotation ID"] = annotation_id
-        numeric_id = self.anim.get_annotation_id(annotation_id)
 
         # self.anim.annotations.
         fn = inpath.parts[-1]
@@ -340,8 +382,6 @@ class MicrAnt:
             })
         # self.report.add_cols_to_actual_row(self.parameters_to_dict())
 
-        datarow["Annotation Title"] = self.anim.annotations[numeric_id]["title"]  # [self.annotation_id]
-        datarow["Annotation Details"] = self.anim.annotations[numeric_id]["details"]  # [self.annotation_id]
         self.report.add_cols_to_actual_row(datarow)
 
     def select_output_dir_gui(self):
@@ -393,43 +433,149 @@ class MicrAnt:
         # self.image2.setPixmap(QtGui.QPixmap(logo_fn).scaled(100, 100))
         # self.image2.show()
 
-    def init_comparison(self):
+    def calculate_actual_annotated_parameter(self, rewrite_annotated_parameter=False, add_noise=False):
+        """
+        Based on common spreadsheet table calculate the actual Annotated parameter
+        :return:
+        """
         xfn = self.parameters.param("Output", "Common Spreadsheet File").value()
-        colname = self.parameters.param("Processing", "Annotated Parameter").value()
+        colname = self.parameters.param("Annotation", "Annotated Parameter").value()
         logger.debug(f"common spreadsheet file = {xfn}")
         logger.debug(f"Annotated Parameter = {colname}")
         df = pd.read_excel(xfn)
-        unique_df = df.drop_duplicates(subset=["File Name", "Annotation ID"], keep="first")
-        # unique_df.keys()
-        df_all_with_param = imst.get_parameter_from_df(unique_df, colname)
-        self.comparison_iterator = imst.generate_image_couples(df_all_with_param)
+        return imst.get_new_parameter_table(
+            df, colname,
+            rewrite_annotated_parameter=rewrite_annotated_parameter,
+            add_noise=add_noise
+        )
 
-    def gui_next_image(self):
+    def init_comparison(self):
+        unique_df2  = self.calculate_actual_annotated_parameter(rewrite_annotated_parameter=True, add_noise=False)
+        # self.comparison_iterator = self.generate_image_couples(df_all_with_param)
+        colname = self.parameters.param("Annotation", "Annotated Parameter").value()
+        threshold = self.parameters.param("Annotation", "Threshold").value()
+        unique_df2 = unique_df2[unique_df2[colname] < threshold]
+        self.comparison_iterator = self.generate_image_couples(unique_df2, colname)
+        self._comparison_parameter_var = unique_df2[colname].var()
+        self._comparison_parameter_std = unique_df2[colname].std()
+        self._comparison_len = len(unique_df2)
+        self._comparison_i = 0
+
+    def gui_show_next_image(self):
+
         if self.comparison_iterator is None:
+            self.report.init()
             self.init_comparison()
 
+        logger.debug(f"{self._comparison_i}/{self._comparison_len}")
+        self._comparison_i += 1
         try:
-
             # get the next item
 
             row, img, prev_row, prev_img = next(self.comparison_iterator)
-            self.image1.imshow(img)
-            self.image2.imshow(prev_img)
+            return row, prev_row
+            # self.image1.imshow(img)
+            # self.image2.imshow(prev_img)
             # do something with element
         except StopIteration:
             self.comparison_iterator = None
+            raise AllLobuliIterated()
+            return None, None
             # if StopIteration is raised, break from loop
 
-    def run(self):
+    def gui_next_image(self):
+        row, prev_row = self.gui_show_next_image()
 
-        data = self.actual_row
-        logger.debug(f"Actual row cols: {list(self.actual_row.keys())}")
-        logger.debug(f"Persistent cols: {list(self.persistent_cols.keys())}")
-        data.update(self.persistent_cols)
+    def gui_swap_image(self):
+        prev_row, prev_prev_row = self.gui_show_next_image()
+        # logger.debug(f"swap 1\n{prev_row}")
+        # logger.debug(f"swap 2\n{prev_prev_row}")
+        # pokud byla minula dvojice nic
+        if prev_prev_row is not None:
+            colname = self.parameters.param("Annotation", "Annotated Parameter").value()
+            add1 = np.random.rand() * 0.2 * (self._comparison_parameter_std)
+            add2 = -np.random.rand() * 0.2 * (self._comparison_parameter_std)
+            self._set_new_swap_value_for_first_row(prev_row, prev_prev_row, colname, add_offset=add1)
+            self._set_new_swap_value_for_first_row(prev_prev_row, prev_row, colname, add_offset=add2)
 
-        df = pd.DataFrame([list(data.values())], columns=list(data.keys()))
-        logger.debug(f"Unique values types {np.unique(map(str, map(type, data.values())))}")
-        self.df = self.df.append(df, ignore_index=True)
+    def gui_set_left_image(self):
+        prev_row, prev_prev_row = self.gui_show_next_image()
+        colname = self.parameters.param("Annotation", "Annotated Parameter").value()
+        value = self.parameters.param("Set Left").value()
+        self.add_std_data_to_row(inpath=Path(prev_row["File Path"]), annotation_id=prev_row["Annotation ID"])
+        self.report.add_cols_to_actual_row({
+            "Annotation Method": "set",
+            colname: value
+        })
+        self.report.finish_actual_row()
+
+    def _set_new_swap_value_for_first_row(self, row, prev_row, colname, add_offset=0):
+
+        value1 = row[colname]
+        value2 = prev_row[colname]
+        v1new = value1 + (value2 - value1) * 1.0 + add_offset
+        self.add_std_data_to_row(inpath=Path(row["File Path"]), annotation_id=row["Annotation ID"])
+        self.report.add_cols_to_actual_row({
+            "Annotation Method": "swap",
+            "Former Annotation Parameter Value": value1,
+            "Compared Annotation Parameter Value": value2,
+            colname: v1new
+        })
+        self.report.finish_actual_row()
+
+
+
+    # def run(self):
+    #
+    #     data = self.actual_row
+    #     logger.debug(f"Actual row cols: {list(self.actual_row.keys())}")
+    #     logger.debug(f"Persistent cols: {list(self.persistent_cols.keys())}")
+    #     data.update(self.persistent_cols)
+    #
+    #     df = pd.DataFrame([list(data.values())], columns=list(data.keys()))
+    #     logger.debug(f"Unique values types {np.unique(map(str, map(type, data.values())))}")
+    #     self.df = self.df.append(df, ignore_index=True)
+
+    def generate_image_couples(self, unique_df, colname):
+        anim = None
+        prev_pth = ""
+        prev_prev_row = None
+        prev_prev_img = None
+        prev_row = None
+        prev_img = None
+        actu_row = None
+        actu_img = None
+        # futu_row = None
+        # futu_img = None
+        for index, row in unique_df.iterrows():
+            ann_id = row["Annotation ID"]
+            pth = row["File Path"]
+            if prev_img is not None and actu_img is not None:
+                self.image1.imshow(prev_img, title=f"{prev_row['File Name']}, {prev_row['Annotation ID']}")
+                self.image2.imshow(actu_img, title=f"{actu_row['File Name']}, {actu_row['Annotation ID']}")
+                self.qapp.processEvents()
+                logger.debug(f"left: {colname}={prev_row[colname]}")
+                logger.debug(f"right: {colname}={actu_row[colname]}")
+
+            if prev_pth != pth:
+                anim = scaffan.image.AnnotatedImage(pth)
+            prev_pth = pth
+            futu_img = imst.get_image_from_ann_id(anim, ann_id)
+            futu_row = row
+
+            # print(f"type actu_row {type(actu_row)} prev row {type(prev_row)}")
+            logger.debug(f"next image will be: {row['File Name']}, {row['Annotation ID']}")
+            if prev_row is not None:
+                # yield actu_row, actu_img, prev_row, prev_img
+                yield prev_row, prev_img, prev_prev_row, prev_prev_img
+            prev_prev_row = prev_row
+            prev_prev_img = prev_img
+            prev_row = actu_row
+            prev_img = actu_img
+            actu_row = futu_row
+            actu_img = futu_img
+
+            # print(f"ann ID={ann_id}")
 
     def start_gui(self, skip_exec=False, qapp=None):
 
@@ -449,11 +595,14 @@ class MicrAnt:
         self.parameters.param("Output", "Select Common Spreadsheet File").sigActivated.connect(
             self.select_output_spreadsheet_gui
         )
-        self.parameters.param("Run").sigActivated.connect(
+        self.parameters.param("Save").sigActivated.connect(
             self.run_lobuluses
         )
-        self.parameters.param("Next").sigActivated.connect(
+        self.parameters.param("Left is higher").sigActivated.connect(
             self.gui_next_image
+        )
+        self.parameters.param("Right is higher").sigActivated.connect(
+            self.gui_swap_image
         )
 
         self.parameters.param("Processing", "Open output dir").setValue(True)
@@ -465,13 +614,16 @@ class MicrAnt:
         # print("run scaffan")
         win = QtGui.QWidget()
         win.setWindowTitle("MicrAnt {}".format(micrant.__version__))
-        logo_fn = op.join(op.dirname(__file__), "scaffan_icon256.png")
+        logo_fn = op.join(op.dirname(__file__), "micrant_icon256.png")
         app_icon = QtGui.QIcon()
         # app_icon.addFile(logo_fn, QtCore.QSize(16, 16))
         app_icon.addFile(logo_fn)
         win.setWindowIcon(app_icon)
         # qapp.setWindowIcon(app_icon)
         layout = QtGui.QGridLayout()
+        layout.setColumnStretch(0, 1)
+        layout.setColumnStretch(1, 1)
+        layout.setColumnStretch(2, 1)
         win.setLayout(layout)
         pic = QtGui.QLabel()
         pic.setPixmap(QtGui.QPixmap(logo_fn).scaled(100, 100))
@@ -499,6 +651,7 @@ class MicrAnt:
         win.resize(1600, 800)
         self.win = win
         # win.
+        self.qapp = qapp
         if not skip_exec:
 
             qapp.exec_()
@@ -517,27 +670,39 @@ class PlotCanvas(FigureCanvas):
                 QSizePolicy.Expanding,
                 QSizePolicy.Expanding)
         FigureCanvas.updateGeometry(self)
+
         self.plot()
+        self.imshow_obj = None
 
 
     def plot(self):
 
         data = [np.random.random() for i in range(25)]
-        ax = self.figure.add_subplot(111)
+        # ax = self.figure.add_subplot(111)
+        ax = self.axes
+        # ax = self.figure.add_subplot(111)
         ax.plot(data, 'r-')
         ax.set_title('PyQt Matplotlib Example')
         self.draw()
 
 
-    def imshow(self, *args, **kwargs):
+    def imshow(self, *args, title="", **kwargs):
         # data = [np.random.random() for i in range(25)]
-        ax = self.figure.add_subplot(111)
+        # ax = self.figure.add_subplot(111)
+        ax = self.axes
         # ax.plot(data, 'r-')
-        ax.imshow(*args, **kwargs)
-        ax.set_title('PyQt Matplotlib Example')
+        if self.imshow_obj is None:
+            self.imshow_obj = ax.imshow(*args, **kwargs)
+        else:
+            self.imshow_obj = ax.imshow(*args, **kwargs)
+            # self.imshow_obj.set_data(args[0])
+        ax.set_title(title)
         self.draw()
 
 
 def get_col_from_ann_details(df, colname):
     df[f"{colname}"] = pd.to_numeric(df["Annotation Details"].str.extract(f'{colname}=(\d*\.?\d*)')[0])
     return df
+
+class AllLobuliIterated(Exception):
+    pass

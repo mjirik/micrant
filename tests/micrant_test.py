@@ -35,5 +35,5 @@ def test_just_create_object():
 
     xfn = mapp.parameters.param("Output", "Common Spreadsheet File").value()
     mapp.start_gui(skip_exec=True, qapp=qapp)
-    mapp.set_parameter("Processing;Annotated Parameter", "SNI")
+    mapp.set_parameter("Annotation;Annotated Parameter", "SNI")
     mapp.gui_next_image()
