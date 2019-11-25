@@ -38,7 +38,7 @@ def get_parameter_from_df(df, colname):
     df_all_with_param = pd.concat([df_nothing, df_not_nothing], axis=0, ignore_index=True, sort=True).sort_values(colname)
     return df_all_with_param
 
-def get_image_from_ann_id(anim:scaffan.image.AnnotatedImage, ann_id):
+def get_image_from_ann_id(anim:scaffan.image.AnnotatedImage, ann_id, level):
     logger.debug(f"ann_id={ann_id}, type={type(ann_id)}")
     outer_ids = anim.select_outer_annotations(ann_id, color="#000000")
     if len(outer_ids) == 0:
@@ -49,7 +49,7 @@ def get_image_from_ann_id(anim:scaffan.image.AnnotatedImage, ann_id):
         view_ann_id = outer_ids[0]
         margin = 0.1
 
-    view = anim.get_view(annotation_id=view_ann_id, margin=margin, level=2)
+    view = anim.get_view(annotation_id=view_ann_id, margin=margin, level=level)
     img = view.get_region_image()
     return img
 
