@@ -45,7 +45,7 @@ before_script:
     - "export DISPLAY=:99.0"
 
 before_install:
-    - sudo apt-get update
+#    - sudo apt-get update
     # - sudo apt-get install -qq cmake libinsighttoolkit3-dev libpng12-dev libgdcm2-dev
     
     # - wget http://home.zcu.cz/~mjirik/lisa/install/install_conda.sh && source install_conda.sh
