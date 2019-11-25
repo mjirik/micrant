@@ -226,7 +226,9 @@ class MicrAnt:
         self.image1 = None
         self.image2 = None
         self.comparison_iterator = None
-        pass
+        self._n_readed_regions = 0
+        self._n_files = 0
+        self._n_files_without_proper_color = 0
 
     def set_parameter(self, param_path, value, parse_path=True):
         """
@@ -266,10 +268,19 @@ class MicrAnt:
         return default_dir
 
     def _get_file_info(self):
-        fnparam = Path(self.parameters.param("Input", "File Path").value())
-        if fnparam.exists() and fnparam.is_file():
-            anim = scaffan.image.AnnotatedImage(str(fnparam))
-            self.parameters.param("Input", "Data Info").setValue(anim.get_file_info())
+        pass
+        # fnparam = Path(self.parameters.param("Input", "File Path").value())
+        # if fnparam.exists() and fnparam.is_file():
+        #     anim = scaffan.image.AnnotatedImage(str(fnparam))
+        #     self.parameters.param("Input", "Data Info").setValue(anim.get_file_info())
+
+    def _show_input_files_info(self):
+        msg = f"Readed {self._n_readed_regions} regions from {self._n_files} files. " +\
+            f"{self._n_files_without_proper_color} without proper color."
+        logger.debug(msg)
+        self.parameters.param("Input", "Data Info").setValue(
+            msg
+        )
 
     def run_lobuluses(self):
         logger.debug(self.report.df)
@@ -302,9 +313,14 @@ class MicrAnt:
             directory=default_dir,
             filter=filter
         )
-        print(names)
+        self.set_input_files(names)
+
+    def set_input_files(self, names):
+        self._n_readed_regions = 0
+        self._n_files_without_proper_color = 0
         for fn in names:
             self.set_input_file(fn)
+        self._n_files = len(names)
 
     def set_annotation_color_selection(self, color:str):
         logger.debug(f"color={color}")
@@ -331,6 +347,7 @@ class MicrAnt:
         fnparam.setValue(fn)
         logger.debug("Set Input File Path to : {}".format(fn))
         self.add_ndpi_file(fn)
+        self._show_input_files_info()
 
     def add_ndpi_file(self, filename:str):
         self.anim = image.AnnotatedImage(filename)
@@ -345,6 +362,10 @@ class MicrAnt:
         annotation_ids = self.anim.select_annotations_by_color(
                 color,
                 raise_exception_if_not_found=self.raise_exception_if_color_not_found)
+        if len(annotation_ids) == 0:
+            self._n_files_without_proper_color += 1
+        else:
+            self._n_readed_regions += 1
 
         for annotation_id in annotation_ids:
             inpath = Path(self.parameters.param("Input", "File Path").value())
