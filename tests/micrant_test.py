@@ -15,9 +15,9 @@ from pathlib import Path
 
 path_to_script = os.path.dirname(os.path.abspath(__file__))
 
+
 def inc(x):
     return x + 1
-
 
 
 # @pytest.mark.interactive
@@ -27,10 +27,12 @@ def inc(x):
 
 TEST_XLSX = Path("test.xlsx")
 
+
 def test_just_create_object():
     mapp = micrant.micrant_app.MicrAnt()
     xfn = mapp.parameters.param("Output", "Common Spreadsheet File").value()
     assert len(xfn) > 0
+
 
 def test_just_create_object():
     mapp = micrant.micrant_app.MicrAnt()
@@ -40,6 +42,7 @@ def test_just_create_object():
     xfn2 = mapp.parameters.param("Output", "Common Spreadsheet File").value()
     assert len(xfn2) > 0
     assert xfn2 != xfn1
+
 
 def test_just_add_image():
 
@@ -56,6 +59,7 @@ def test_just_add_image():
     mapp.set_input_file(fn)
     # logger.debug("")
     assert TEST_XLSX.exists()
+
 
 def test_just_create_next_image():
     qapp = QtWidgets.QApplication(sys.argv)

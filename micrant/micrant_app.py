@@ -9,7 +9,16 @@ from loguru import logger
 
 from PyQt5 import QtGui
 
-from PyQt5.QtWidgets import QApplication, QMainWindow, QMenu, QVBoxLayout, QSizePolicy, QMessageBox, QWidget, QPushButton
+from PyQt5.QtWidgets import (
+    QApplication,
+    QMainWindow,
+    QMenu,
+    QVBoxLayout,
+    QSizePolicy,
+    QMessageBox,
+    QWidget,
+    QPushButton,
+)
 from PyQt5.QtGui import QIcon
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -36,6 +45,7 @@ from pyqtgraph.parametertree import Parameter, ParameterTree
 import pyqtgraph.widgets
 from . import image_sort_tools as imst
 
+
 class MicrAnt:
     def __init__(self):
 
@@ -54,13 +64,17 @@ class MicrAnt:
         # self.glcm_textures.set_report(self.report)
         # self.skeleton_analysis.set_report(self.report)
         # self.evaluation.report = self.report
-        self.win:QtGui.QWidget = None
+        self.win: QtGui.QWidget = None
         # self.win = None
         self.cache = cachefile.CacheFile("~/.micrant_cache.yaml")
         # self.cache.update('', path)
         common_spreadsheet_file = self.cache.get_or_save_default(
-            "common_spreadsheet_file", self._prepare_default_output_common_spreadsheet_file())
-        logger.debug("common_spreadsheet_file loaded as: {}".format(common_spreadsheet_file))
+            "common_spreadsheet_file",
+            self._prepare_default_output_common_spreadsheet_file(),
+        )
+        logger.debug(
+            "common_spreadsheet_file loaded as: {}".format(common_spreadsheet_file)
+        )
         params = [
             {
                 "name": "Input",
@@ -122,37 +136,26 @@ class MicrAnt:
                         "type": "str",
                         "value": common_spreadsheet_file,
                     },
-                    {"name": "Select Common Spreadsheet File", "type": "action",
-                     "tip": "All measurements are appended to this file in addition to data stored in Output Directory Path."
-                     },
+                    {
+                        "name": "Select Common Spreadsheet File",
+                        "type": "action",
+                        "tip": "All measurements are appended to this file in addition to data stored in Output Directory Path.",
+                    },
                 ],
             },
             {
                 "name": "Annotation",
                 "type": "group",
                 "children": [
-
-                    {
-                        "name": "Annotated Parameter",
-                        "type": "str",
-                        "value": "",
-                    },
-                    {
-                        "name": "Threshold",
-                        "type": 'float',
-                        "value": 0
-                    },
-                ]
+                    {"name": "Annotated Parameter", "type": "str", "value": "",},
+                    {"name": "Threshold", "type": "float", "value": 0},
+                ],
             },
             {
                 "name": "Processing",
                 "type": "group",
                 "children": [
-                    {
-                        "name": "Image Level",
-                        "type": 'int',
-                        "value": 2
-                    },
+                    {"name": "Image Level", "type": "int", "value": 2},
                     # {'name': 'Directory Path', 'type': 'str', 'value': prepare_default_output_dir()},
                     # {
                     #     "name": "Show",
@@ -193,19 +196,31 @@ class MicrAnt:
                         "type": "int",
                         "value": 50,
                         "tip": "Control ammount of stored images. 0 - all debug imagess will be stored. "
-                               "100 - just important images will be saved.",
+                        "100 - just important images will be saved.",
                     },
                 ],
             },
-            {"name": "Set Left", "type": "action", "tip": "Set parameter value of left image and show next couple"},
+            {
+                "name": "Set Left",
+                "type": "action",
+                "tip": "Set parameter value of left image and show next couple",
+            },
             {
                 "name": "New Parameter Value",
                 "type": "float",
                 "value": 0,
                 "tip": "Used when Set Left is clicked",
             },
-            {"name": "Left is higher", "type": "action", "tip": "Annotated parameter on left image is higher than on right image"},
-            {"name": "Right is higher", "type": "action", "tip": "Annotated parameter on right image is higher than on left image"},
+            {
+                "name": "Left is higher",
+                "type": "action",
+                "tip": "Annotated parameter on left image is higher than on right image",
+            },
+            {
+                "name": "Right is higher",
+                "type": "action",
+                "tip": "Annotated parameter on right image is higher than on left image",
+            },
             {"name": "Save", "type": "action"},
             # {"name": "Run", "type": "action"},
             # {'name': 'Numerical Parameter Options', 'type': 'group', 'children': [
@@ -244,7 +259,6 @@ class MicrAnt:
         fnparam = self.parameters.param(*param_path)
         fnparam.setValue(value)
 
-
     def _prepare_default_output_dir(self):
         default_dir = io3d.datasets.join_path(get_root=True)
         # default_dir = op.expanduser("~/data")
@@ -275,12 +289,12 @@ class MicrAnt:
         #     self.parameters.param("Input", "Data Info").setValue(anim.get_file_info())
 
     def _show_input_files_info(self):
-        msg = f"Readed {self._n_readed_regions} regions from {self._n_files} files. " +\
-            f"{self._n_files_without_proper_color} without proper color."
-        logger.debug(msg)
-        self.parameters.param("Input", "Data Info").setValue(
-            msg
+        msg = (
+            f"Readed {self._n_readed_regions} regions from {self._n_files} files. "
+            + f"{self._n_files_without_proper_color} without proper color."
         )
+        logger.debug(msg)
+        self.parameters.param("Input", "Data Info").setValue(msg)
 
     def run_lobuluses(self):
         logger.debug(self.report.df)
@@ -308,10 +322,7 @@ class MicrAnt:
         file_name = QtGui.QFileDialog()
         file_name.setFileMode(QtGui.QFileDialog.ExistingFiles)
         names, _ = file_name.getOpenFileNames(
-            self.win,
-            "Select Input Files",
-            directory=default_dir,
-            filter=filter
+            self.win, "Select Input Files", directory=default_dir, filter=filter
         )
         self.set_input_files(names)
 
@@ -322,7 +333,7 @@ class MicrAnt:
             self.set_input_file(fn)
         self._n_files = len(names)
 
-    def set_annotation_color_selection(self, color:str):
+    def set_annotation_color_selection(self, color: str):
         logger.debug(f"color={color}")
         pcolor = self.parameters.param("Input", "Annotation Color")
         color = color.upper()
@@ -341,7 +352,7 @@ class MicrAnt:
         else:
             raise ValueError("Color '{}' not found in allowed colors.".format(color))
 
-    def set_input_file(self, fn:Union[Path, str]):
+    def set_input_file(self, fn: Union[Path, str]):
         fn = str(fn)
         fnparam = self.parameters.param("Input", "File Path")
         fnparam.setValue(fn)
@@ -349,7 +360,7 @@ class MicrAnt:
         self.add_ndpi_file(fn)
         self._show_input_files_info()
 
-    def add_ndpi_file(self, filename:str):
+    def add_ndpi_file(self, filename: str):
         self.anim = image.AnnotatedImage(filename)
         fnparam = self.parameters.param("Output", "Directory Path")
         self.report.init_with_output_dir(fnparam.value())
@@ -360,8 +371,8 @@ class MicrAnt:
         pcolor = self.parameters.param("Input", "Annotation Color")
         color = pcolor.value()
         annotation_ids = self.anim.select_annotations_by_color(
-                color,
-                raise_exception_if_not_found=self.raise_exception_if_color_not_found)
+            color, raise_exception_if_not_found=self.raise_exception_if_color_not_found
+        )
         if len(annotation_ids) == 0:
             self._n_files_without_proper_color += 1
         else:
@@ -371,41 +382,52 @@ class MicrAnt:
             inpath = Path(self.parameters.param("Input", "File Path").value())
             self.add_std_data_to_row(inpath, annotation_id)
             numeric_id = self.anim.get_annotation_id(annotation_id)
-            self.report.add_cols_to_actual_row({
-                "Annotation Method": "nothing",
-                "Annotation Title": self.anim.annotations[numeric_id]["title"],  # [self.annotation_id]
-                "Annotation Details": self.anim.annotations[numeric_id]["details"],  # [self.annotation_id]
-            })
+            self.report.add_cols_to_actual_row(
+                {
+                    "Annotation Method": "nothing",
+                    "Annotation Title": self.anim.annotations[numeric_id][
+                        "title"
+                    ],  # [self.annotation_id]
+                    "Annotation Details": self.anim.annotations[numeric_id][
+                        "details"
+                    ],  # [self.annotation_id]
+                }
+            )
             self.report.finish_actual_row()
         self._dump_report()
 
     def _dump_report(self):
-        common_spreadsheet_file = self.parameters.param("Output", "Common Spreadsheet File").value()
+        common_spreadsheet_file = self.parameters.param(
+            "Output", "Common Spreadsheet File"
+        ).value()
         excel_path = Path(common_spreadsheet_file)
         # print("we will write to excel", excel_path)
         filename = str(excel_path)
         exsu.report.append_df_to_excel(filename, self.report.df)
         self.report.init()
 
-    def add_std_data_to_row(self, inpath:Path, annotation_id):
+    def add_std_data_to_row(self, inpath: Path, annotation_id):
         datarow = {}
         datarow["Annotation ID"] = annotation_id
 
         # self.anim.annotations.
         fn = inpath.parts[-1]
-        fn_out = (self.parameters.param("Output", "Directory Path").value())
+        fn_out = self.parameters.param("Output", "Directory Path").value()
         self.report.add_cols_to_actual_row(
             {
                 "File Name": str(fn),
                 "File Path": str(inpath),
-                "Annotation Color": self.parameters.param("Input", "Annotation Color").value(),
-                "Datetime": datetime.datetime.now().isoformat(' ', 'seconds'),
+                "Annotation Color": self.parameters.param(
+                    "Input", "Annotation Color"
+                ).value(),
+                "Datetime": datetime.datetime.now().isoformat(" ", "seconds"),
                 "platform.system": platform.uname().system,
                 "platform.node": platform.uname().node,
                 "platform.processor": platform.uname().processor,
                 "MicrAnt Version": micrant.__version__,
-                "Output Directory Path": str(fn_out)
-            })
+                "Output Directory Path": str(fn_out),
+            }
+        )
         # self.report.add_cols_to_actual_row(self.parameters_to_dict())
 
         self.report.add_cols_to_actual_row(datarow)
@@ -441,7 +463,7 @@ class MicrAnt:
             None,
             "Select Common Spreadsheet File",
             directory=start_dir,
-            filter="Excel File (*.xlsx)"
+            filter="Excel File (*.xlsx)",
         )[0]
         # print (fn)
         self.set_common_spreadsheet_file(fn)
@@ -449,7 +471,7 @@ class MicrAnt:
     def set_common_spreadsheet_file(self, path):
         fnparam = self.parameters.param("Output", "Common Spreadsheet File")
         fnparam.setValue(path)
-        self.cache.update('common_spreadsheet_file', path)
+        self.cache.update("common_spreadsheet_file", path)
         logger.info("common_spreadsheet_file set to {}".format(path))
 
     def gui_set_image1(self):
@@ -459,7 +481,9 @@ class MicrAnt:
         # self.image2.setPixmap(QtGui.QPixmap(logo_fn).scaled(100, 100))
         # self.image2.show()
 
-    def calculate_actual_annotated_parameter(self, rewrite_annotated_parameter=False, add_noise=False):
+    def calculate_actual_annotated_parameter(
+        self, rewrite_annotated_parameter=False, add_noise=False
+    ):
         """
         Based on common spreadsheet table calculate the actual Annotated parameter
         :return:
@@ -470,13 +494,16 @@ class MicrAnt:
         logger.debug(f"Annotated Parameter = {colname}")
         df = pd.read_excel(xfn)
         return imst.get_new_parameter_table(
-            df, colname,
+            df,
+            colname,
             rewrite_annotated_parameter=rewrite_annotated_parameter,
-            add_noise=add_noise
+            add_noise=add_noise,
         )
 
     def init_comparison(self):
-        unique_df2  = self.calculate_actual_annotated_parameter(rewrite_annotated_parameter=True, add_noise=False)
+        unique_df2 = self.calculate_actual_annotated_parameter(
+            rewrite_annotated_parameter=True, add_noise=False
+        )
         # self.comparison_iterator = self.generate_image_couples(df_all_with_param)
         colname = self.parameters.param("Annotation", "Annotated Parameter").value()
         threshold = self.parameters.param("Annotation", "Threshold").value()
@@ -521,18 +548,21 @@ class MicrAnt:
             colname = self.parameters.param("Annotation", "Annotated Parameter").value()
             add1 = np.random.rand() * 0.2 * (self._comparison_parameter_std)
             add2 = -np.random.rand() * 0.2 * (self._comparison_parameter_std)
-            self._set_new_swap_value_for_first_row(prev_row, prev_prev_row, colname, add_offset=add1)
-            self._set_new_swap_value_for_first_row(prev_prev_row, prev_row, colname, add_offset=add2)
+            self._set_new_swap_value_for_first_row(
+                prev_row, prev_prev_row, colname, add_offset=add1
+            )
+            self._set_new_swap_value_for_first_row(
+                prev_prev_row, prev_row, colname, add_offset=add2
+            )
 
     def gui_set_left_image(self):
         prev_row, prev_prev_row = self.gui_show_next_image()
         colname = self.parameters.param("Annotation", "Annotated Parameter").value()
         value = self.parameters.param("Set Left").value()
-        self.add_std_data_to_row(inpath=Path(prev_row["File Path"]), annotation_id=prev_row["Annotation ID"])
-        self.report.add_cols_to_actual_row({
-            "Annotation Method": "set",
-            colname: value
-        })
+        self.add_std_data_to_row(
+            inpath=Path(prev_row["File Path"]), annotation_id=prev_row["Annotation ID"]
+        )
+        self.report.add_cols_to_actual_row({"Annotation Method": "set", colname: value})
         self.report.finish_actual_row()
 
     def _set_new_swap_value_for_first_row(self, row, prev_row, colname, add_offset=0):
@@ -540,16 +570,18 @@ class MicrAnt:
         value1 = row[colname]
         value2 = prev_row[colname]
         v1new = value1 + (value2 - value1) * 1.0 + add_offset
-        self.add_std_data_to_row(inpath=Path(row["File Path"]), annotation_id=row["Annotation ID"])
-        self.report.add_cols_to_actual_row({
-            "Annotation Method": "swap",
-            "Former Annotation Parameter Value": value1,
-            "Compared Annotation Parameter Value": value2,
-            colname: v1new
-        })
+        self.add_std_data_to_row(
+            inpath=Path(row["File Path"]), annotation_id=row["Annotation ID"]
+        )
+        self.report.add_cols_to_actual_row(
+            {
+                "Annotation Method": "swap",
+                "Former Annotation Parameter Value": value1,
+                "Compared Annotation Parameter Value": value2,
+                colname: v1new,
+            }
+        )
         self.report.finish_actual_row()
-
-
 
     # def run(self):
     #
@@ -577,8 +609,14 @@ class MicrAnt:
             ann_id = row["Annotation ID"]
             pth = row["File Path"]
             if prev_img is not None and actu_img is not None:
-                self.image1.imshow(prev_img, title=f"{prev_row['File Name']}, {prev_row['Annotation ID']}")
-                self.image2.imshow(actu_img, title=f"{actu_row['File Name']}, {actu_row['Annotation ID']}")
+                self.image1.imshow(
+                    prev_img,
+                    title=f"{prev_row['File Name']}, {prev_row['Annotation ID']}",
+                )
+                self.image2.imshow(
+                    actu_img,
+                    title=f"{actu_row['File Name']}, {actu_row['Annotation ID']}",
+                )
                 self.qapp.processEvents()
                 logger.debug(f"left: {colname}={prev_row[colname]}")
                 logger.debug(f"right: {colname}={actu_row[colname]}")
@@ -591,7 +629,9 @@ class MicrAnt:
             futu_row = row
 
             # print(f"type actu_row {type(actu_row)} prev row {type(prev_row)}")
-            logger.debug(f"next image will be: {row['File Name']}, {row['Annotation ID']}")
+            logger.debug(
+                f"next image will be: {row['File Name']}, {row['Annotation ID']}"
+            )
             if prev_row is not None:
                 # yield actu_row, actu_img, prev_row, prev_img
                 yield prev_row, prev_img, prev_prev_row, prev_prev_img
@@ -619,12 +659,10 @@ class MicrAnt:
         self.parameters.param("Output", "Select").sigActivated.connect(
             self.select_output_dir_gui
         )
-        self.parameters.param("Output", "Select Common Spreadsheet File").sigActivated.connect(
-            self.select_output_spreadsheet_gui
-        )
-        self.parameters.param("Save").sigActivated.connect(
-            self.run_lobuluses
-        )
+        self.parameters.param(
+            "Output", "Select Common Spreadsheet File"
+        ).sigActivated.connect(self.select_output_spreadsheet_gui)
+        self.parameters.param("Save").sigActivated.connect(self.run_lobuluses)
         self.parameters.param("Left is higher").sigActivated.connect(
             self.gui_next_image
         )
@@ -656,8 +694,6 @@ class MicrAnt:
         pic.setPixmap(QtGui.QPixmap(logo_fn).scaled(100, 100))
         pic.show()
 
-
-
         self.image1 = PlotCanvas()
         self.image1.plot()
         self.image2 = PlotCanvas()
@@ -685,7 +721,6 @@ class MicrAnt:
 
 
 class PlotCanvas(FigureCanvas):
-
     def __init__(self, parent=None, width=5, height=4, dpi=100):
         fig = Figure(figsize=(width, height), dpi=dpi)
         self.axes = fig.add_subplot(111)
@@ -693,14 +728,11 @@ class PlotCanvas(FigureCanvas):
         FigureCanvas.__init__(self, fig)
         self.setParent(parent)
 
-        FigureCanvas.setSizePolicy(self,
-                QSizePolicy.Expanding,
-                QSizePolicy.Expanding)
+        FigureCanvas.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Expanding)
         FigureCanvas.updateGeometry(self)
 
         self.plot()
         self.imshow_obj = None
-
 
     def plot(self):
 
@@ -708,10 +740,9 @@ class PlotCanvas(FigureCanvas):
         # ax = self.figure.add_subplot(111)
         ax = self.axes
         # ax = self.figure.add_subplot(111)
-        ax.plot(data, 'r-')
-        ax.set_title('PyQt Matplotlib Example')
+        ax.plot(data, "r-")
+        ax.set_title("PyQt Matplotlib Example")
         self.draw()
-
 
     def imshow(self, *args, title="", **kwargs):
         # data = [np.random.random() for i in range(25)]
@@ -728,8 +759,11 @@ class PlotCanvas(FigureCanvas):
 
 
 def get_col_from_ann_details(df, colname):
-    df[f"{colname}"] = pd.to_numeric(df["Annotation Details"].str.extract(f'{colname}=(\d*\.?\d*)')[0])
+    df[f"{colname}"] = pd.to_numeric(
+        df["Annotation Details"].str.extract(f"{colname}=(\d*\.?\d*)")[0]
+    )
     return df
+
 
 class AllLobuliIterated(Exception):
     pass

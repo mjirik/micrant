@@ -4,25 +4,41 @@ import scaffan.image
 import pandas as pd
 import numpy as np
 
+
 def get_col_from_ann_details(df, colname):
-    df[f"{colname}"] = pd.to_numeric(df["Annotation Details"].str.extract(f'{colname}=(\d*\.?\d*)')[0])
+    df[f"{colname}"] = pd.to_numeric(
+        df["Annotation Details"].str.extract(f"{colname}=" + r"(\d*\.?\d*)")[0]
+    )
     return df
 
-def get_new_parameter_table(df:pd.DataFrame, colname, rewrite_annotated_parameter=False, add_noise=False):
+
+def get_new_parameter_table(
+    df: pd.DataFrame, colname, rewrite_annotated_parameter=False, add_noise=False
+):
     # unique_df = df.drop_duplicates(subset=["File Name", "Annotation ID"], keep="first")
     # unique_df.keys()
     df_all_with_param = get_parameter_from_df(df, colname)
     unique_df2 = df_all_with_param.groupby(["Annotation ID", "File Name"]).agg(
-        {colname: {"recent": np.mean, "var": np.var, "count": "count"}, "File Path": "last"})
+        {
+            colname: {"recent": np.mean, "var": np.var, "count": "count"},
+            "File Path": "last",
+        }
+    )
     unique_df2 = unique_df2.reset_index()
-    unique_df2.columns = [' '.join(col).strip() for col in unique_df2.columns.values]
-    unique_df2:pd.DataFrame = unique_df2.rename(columns={"File Path last": "File Path"})
+    unique_df2.columns = [" ".join(col).strip() for col in unique_df2.columns.values]
+    unique_df2: pd.DataFrame = unique_df2.rename(
+        columns={"File Path last": "File Path"}
+    )
     colname_recent = colname + " recent"
     if add_noise:
-        sigma = 4 * (unique_df2[colname_recent].max() - unique_df2[colname_recent].min()) / len(unique_df2)
+        sigma = (
+            4
+            * (unique_df2[colname_recent].max() - unique_df2[colname_recent].min())
+            / len(unique_df2)
+        )
         noise = np.random.normal(0, sigma, len(unique_df2))
         unique_df2[colname + " recent"] += noise
-    unique_df2 = unique_df2.sort_values(by=colname_recent,ascending=False)
+    unique_df2 = unique_df2.sort_values(by=colname_recent, ascending=False)
     if rewrite_annotated_parameter:
         unique_df2[colname] = unique_df2[colname_recent]
 
@@ -33,12 +49,17 @@ def get_parameter_from_df(df, colname):
     """
     Pick up parameter for non processed data from Annotation Details and keep parameter column in all other rows.
     """
-    df_nothing = get_col_from_ann_details(df[df["Annotation Method"] == "nothing"], "SNI")
+    df_nothing = get_col_from_ann_details(
+        df[df["Annotation Method"] == "nothing"], "SNI"
+    )
     df_not_nothing = df[df["Annotation Method"] != "nothing"]
-    df_all_with_param = pd.concat([df_nothing, df_not_nothing], axis=0, ignore_index=True, sort=True).sort_values(colname)
+    df_all_with_param = pd.concat(
+        [df_nothing, df_not_nothing], axis=0, ignore_index=True, sort=True
+    ).sort_values(colname)
     return df_all_with_param
 
-def get_image_from_ann_id(anim:scaffan.image.AnnotatedImage, ann_id, level):
+
+def get_image_from_ann_id(anim: scaffan.image.AnnotatedImage, ann_id, level):
     logger.debug(f"ann_id={ann_id}, type={type(ann_id)}")
     outer_ids = anim.select_outer_annotations(ann_id, color="#000000")
     if len(outer_ids) == 0:
@@ -64,7 +85,6 @@ def generate_images(unique_df):
         img = get_image_from_ann_id(anim, row["Annotation ID"])
         prev_pth = pth
         yield row, img
-
 
 
 def generate_image_couples(unique_df):
@@ -93,9 +113,14 @@ def add_parameter_column(df, df_micrant, colname):
     :param colname: name of parameter (i.g. SNI)
     :return:
     """
-    df_sni_reconstruction = get_new_parameter_table(df_micrant, colname=colname, rewrite_annotated_parameter=True)
+    df_sni_reconstruction = get_new_parameter_table(
+        df_micrant, colname=colname, rewrite_annotated_parameter=True
+    )
 
     dfout = df.join(
-        df_sni_reconstruction[["Annotation ID", "File Name", colname]].set_index(["Annotation ID", "File Name"]),
-        on=["Annotation ID", "File Name"])
+        df_sni_reconstruction[["Annotation ID", "File Name", colname]].set_index(
+            ["Annotation ID", "File Name"]
+        ),
+        on=["Annotation ID", "File Name"],
+    )
     return dfout
