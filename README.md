@@ -4,7 +4,10 @@
 [![PyPI version](https://badge.fury.io/py/micrant.svg)](http://badge.fury.io/py/micrant)
 
 
-micrant
+# Micrant
 
-Annotation of microscopic data for image processing
+Annotation of microscopic data for image processing by comparing two images.
+
+
+![graphics](graphics/micrant_screenshot01.png)
 

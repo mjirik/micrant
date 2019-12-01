@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="256"
+   height="256"
+   viewBox="0 0 256 256"
+   id="svg3366"
+   version="1.1"
+   inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
+   sodipodi:docname="micrant_icon.svg"
+   inkscape:export-filename="C:\Users\Jirik\projects\micrant\micrant\micrant_icon512.png"
+   inkscape:export-xdpi="192"
+   inkscape:export-ydpi="192">
+  <defs
+     id="defs3368" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1.4"
+     inkscape:cx="30.495342"
+     inkscape:cy="146.38252"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="true"
+     units="px"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1">
+    <inkscape:grid
+       type="xygrid"
+       id="grid4582" />
+  </sodipodi:namedview>
+  <metadata
+     id="metadata3371">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Vrstva 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-796.3622)">
+    <path
+       style="fill:#ba5190;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m -19.697974,1067.5146 c 4.150019,12.4901 35.848845,-19.5181 135.360434,-20.2031 146.05559,-1.0054 180.13707,15.2258 173.74624,-1.0102 13.29828,-28.3792 -30.32211,-55.37166 -52.02286,-62.62948 -21.70075,-7.25782 -84.54061,-2.66921 -110.35202,1.83438 -25.81141,4.50359 -75.94658,2.09254 -105.315543,-16.98667 -29.3689629,-19.0792 -52.730255,-64.65462 -61.6193,-101.52033 -146.938317,-120.1336 2.56612,-132.82041 -29.799502,30.80965 -11.472972,59.27813 38.057122,133.75415 50.002551,169.70575 z"
+       id="path835"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="ssczzzccs" />
+    <path
+       style="fill:#ba5190;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m -326.59982,989.11626 c 31.64651,0.72521 67.52439,-35.14104 87.6348,-68.21876 20.11041,-33.07772 12.30293,-81.1992 0.66193,-126.69465 l 11.25276,-7.25822 21.10662,5.5572 c 19.55896,130.88997 48.09825,65.1782 132.414074,-0.1411 l 40.45261,8.83435 c 0,0 -91.849514,75.25003 -99.979664,83.40764 -8.13015,8.15707 -144.94795,109.10559 -6.68832,108.77934 49.324194,0.45348 129.923114,-32.39834 129.923114,-32.39834 l -30.1132,115.77738 c -89.017664,-11.4864 -147.625474,-4.5137 -185.155024,-6.0282 -37.52955,-1.5146 -44.1078,-5.9652 -97.38129,-0.3158 -31.45895,-32.4241 -29.92729,-56.949 -4.12841,-81.30084 z"
+       id="path3376"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="czccccczccczcc" />
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3334"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:0.01%;font-family:sans-serif;-inkscape-font-specification:'sans-serif Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       transform="matrix(1.1186249,0,0,1.1335969,119.71277,879.55074)"><flowRegion
+         id="flowRegion3336"><rect
+           id="rect3338"
+           width="399.51532"
+           height="91.923882"
+           x="-110.10663"
+           y="93.36544"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:53.75px;font-family:sans-serif;-inkscape-font-specification:'sans-serif Bold';fill:#ffffff;fill-opacity:1" /></flowRegion><flowPara
+         id="flowPara3340"
+         style="font-size:53.75px;line-height:1.25">MicrAnt</flowPara></flowRoot>    <path
+       style="fill:none;fill-opacity:1;stroke:#ba5190;stroke-width:7.80472422;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 62.629463,856.89768 c -48.596559,-23.99828 -31.520465,20.55357 -19.950515,57.83125 11.56995,37.27768 30.848513,32.17987 47.982249,17.9302 17.133733,-14.24967 20.564823,-51.76316 -28.031734,-75.76145 z"
+       id="path845"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="zzzz" />
+    <path
+       style="fill:none;fill-opacity:1;stroke:#ba5190;stroke-width:7.80472422;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 225.55656,840.70562 c -19.75113,-17.62322 -55.11611,-22.8097 -55.81093,10.35407 -0.69483,33.16377 46.87865,76.25034 56.06347,72.47844 9.18482,-3.7719 19.49859,-65.20929 -0.25254,-82.83251 z"
+       id="path845-6"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="zzzz" />
+    <path
+       style="fill:none;stroke:#ba5190;stroke-width:11.33858299;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 65,882.3622 v 35"
+       id="path4559-5"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:none;stroke:#ba5190;stroke-width:11.33858299;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 195,847.3622 v 35"
+       id="path4559-5-4"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:none;stroke:#ba5190;stroke-width:11.33858299;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 215,847.3622 v 35"
+       id="path4559-5-1"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc" />
+  </g>
+</svg>
