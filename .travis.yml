@@ -23,11 +23,11 @@ services:
   - xvfb
 matrix:
   include:
-    - os: osx
-      language: minimal
-      name: osx python36
-      env:
-        - CONDA_PYTHON_VERSION=3.6
+#    - os: osx
+#      language: minimal
+#      name: osx python36
+#      env:
+#        - CONDA_PYTHON_VERSION=3.6
     - os: osx
       language: minimal
       name: osx python37
