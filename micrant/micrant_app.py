@@ -623,7 +623,7 @@ class MicrAnt:
 
             if prev_pth != pth:
                 anim = scaffan.image.AnnotatedImage(pth)
-            level = self.parameters.param("Processing", "Image Level")
+            level = self.parameters.param("Processing", "Image Level").value()
             prev_pth = pth
             futu_img = imst.get_image_from_ann_id(anim, ann_id, level=level)
             futu_row = row
