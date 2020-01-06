@@ -18,7 +18,8 @@ You can use [anaconda distribution](https://docs.conda.io/en/latest/miniconda.ht
 for easy installation 
 
 ```bash
-conda install -c mjirik -c conda-forge -c bioconda scaffan python=3.6 pytest
+conda install -c mjirik -c conda-forge -c bioconda scaffan python=3.6 exsu
+scikit-learn
 ```
 
 ## Get sample data and test
@@ -26,6 +27,7 @@ conda install -c mjirik -c conda-forge -c bioconda scaffan python=3.6 pytest
 Download sample images to ~/data
 
 ```bash
+conda install -c mjirik -c conda-forge -c pytest
 python -m io3d.datasets -v -l CMU-1 CMU-1-annotation SCP003
 python -m pytest tests/
 ```
