@@ -11,3 +11,13 @@ Annotation of microscopic data for image processing by comparing two images.
 
 ![graphics](graphics/micrant_screenshot01.png)
 
+
+# Install
+
+You can use [anaconda distribution](https://docs.conda.io/en/latest/miniconda.html)
+for easy installation 
+
+```bash
+conda install -c mjirik -c conda-forge -c bioconda scaffan python=3.6 pytest
+```
+
