@@ -21,3 +21,14 @@ for easy installation
 conda install -c mjirik -c conda-forge -c bioconda scaffan python=3.6 pytest
 ```
 
+## Get sample data and test
+
+Download sample images to ~/data
+
+```bash
+python -m io3d.datasets -v -l CMU-1 CMU-1-annotation SCP003
+python -m pytest tests/
+```
+
+
+
