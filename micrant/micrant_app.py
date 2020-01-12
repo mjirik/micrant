@@ -579,6 +579,8 @@ class MicrAnt:
                 "Former Annotation Parameter Value": value1,
                 "Compared Annotation Parameter Value": value2,
                 colname: v1new,
+                "Compared Annotation File Path": str(Path(prev_row["File Path"])),
+                "Compared Annotation ID": prev_row["Annotation ID"]
             }
         )
         self.report.finish_actual_row()
