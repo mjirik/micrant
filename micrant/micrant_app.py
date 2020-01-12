@@ -605,11 +605,11 @@ class MicrAnt:
     def show_parameter_stats(self):
         df, colname, threshold = self._annotated_param_and_thr_dataframe_subselection()
         # plt.figure(self.image1.fig.number)
-        print("type: ", type(self.image1.fig))
+        # print("type: ", type(self.image1.fig))
 
         # plt.hist(df[colname])
 
-        print("df: ", df[colname])
+        # print("df: ", df[colname])
         # ax = self.figure.add_subplot(111)
         ax = self.image1.axes
         ax.clear()
@@ -623,6 +623,18 @@ class MicrAnt:
         sns.distplot(df[colname], ax=ax, norm_hist=False)
         self.image1.draw()
 
+        # image 2
+        ax = self.image2.axes
+        ax.clear()
+        # ax.hist(df[colname])
+        # ax.plot(data, "r-")
+        ax.set_title(f"Histogram of {colname}")
+        ax.relim()
+        ax.autoscale_view(True, True, True)
+        # self.image1.draw()
+        import seaborn as sns
+        sns.boxplot(data=df, x=colname, y="File Name", ax=ax, orient="h")
+        self.image2.draw()
         # df[colname].hist(
             # ax=self.image1.axes
         # )
@@ -744,9 +756,9 @@ class MicrAnt:
         pic.show()
 
         self.image1 = PlotCanvas()
-        self.image1.plot()
+        # self.image1.plot()
         self.image2 = PlotCanvas()
-        self.image2.plot()
+        # self.image2.plot()
 
         # self.addToolBar(NavigationToolbar(self.image1, self))
         # self.image1.setPixmap(QtGui.QPixmap(logo_fn).scaled(100, 100))
