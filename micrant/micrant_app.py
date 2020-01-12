@@ -41,6 +41,8 @@ import exsu
 import numpy as np
 import pandas as pd
 
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+
 from pyqtgraph.parametertree import Parameter, ParameterTree
 import pyqtgraph.widgets
 from . import image_sort_tools as imst
@@ -738,7 +740,7 @@ class MicrAnt:
         layout.setColumnStretch(2, 3)
         win.setLayout(layout)
         pic = QtGui.QLabel()
-        pic.setPixmap(QtGui.QPixmap(logo_fn).scaled(100, 100))
+        pic.setPixmap(QtGui.QPixmap(logo_fn).scaled(50, 50))
         pic.show()
 
         self.image1 = PlotCanvas()
@@ -746,7 +748,7 @@ class MicrAnt:
         self.image2 = PlotCanvas()
         self.image2.plot()
 
-        self.addToolBar(NavigationToolbar(static_canvas, self))
+        # self.addToolBar(NavigationToolbar(self.image1, self))
         # self.image1.setPixmap(QtGui.QPixmap(logo_fn).scaled(100, 100))
         # self.image1.show()
         # self.image2 = QtGui.QLabel()
@@ -755,8 +757,10 @@ class MicrAnt:
         # layout.addWidget(QtGui.QLabel("These are two views of the same data. They should always display the same values."), 0,  0, 1, 2)
         layout.addWidget(pic, 1, 0, 1, 1)
         layout.addWidget(t, 2, 0, 1, 1)
-        layout.addWidget(self.image1, 1, 1, 2, 1)
-        layout.addWidget(self.image2, 1, 2, 2, 1)
+        layout.addWidget(NavigationToolbar(self.image1, win),1, 1, 1, 1)
+        layout.addWidget(self.image1, 2, 1, 1, 1)
+        layout.addWidget(NavigationToolbar(self.image2, win),1, 2, 1, 1)
+        layout.addWidget(self.image2, 2, 2, 1, 1)
         # layout.addWidget(t2, 1, 1, 1, 1)
 
         win.show()
