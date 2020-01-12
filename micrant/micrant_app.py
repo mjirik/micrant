@@ -474,15 +474,15 @@ class MicrAnt:
         self.cache.update("common_spreadsheet_file", path)
         logger.info("common_spreadsheet_file set to {}".format(path))
 
-    def gui_set_image1(self):
-        self.image1.setPixmap(QtGui.QPixmap(logo_fn).scaled(100, 100))
-        self.image1.show()
+    # def gui_set_image1(self):
+    #     self.image1.setPixmap(QtGui.QPixmap(logo_fn).scaled(100, 100))
+    #     self.image1.show()
         # self.image2 = QtGui.QLabel()
         # self.image2.setPixmap(QtGui.QPixmap(logo_fn).scaled(100, 100))
         # self.image2.show()
 
     def calculate_actual_annotated_parameter(
-        self, rewrite_annotated_parameter=False, add_noise=False
+        self, rewrite_annotated_parameter_with_recent=False, add_noise=False
     ):
         """
         Based on common spreadsheet table calculate the actual Annotated parameter
@@ -496,18 +496,23 @@ class MicrAnt:
         return imst.get_new_parameter_table(
             df,
             colname,
-            rewrite_annotated_parameter=rewrite_annotated_parameter,
+            rewrite_annotated_parameter_with_recent=rewrite_annotated_parameter_with_recent,
             add_noise=add_noise,
         )
 
-    def init_comparison(self):
+    def _annotated_param_and_thr_dataframe_subselection(self):
         unique_df2 = self.calculate_actual_annotated_parameter(
-            rewrite_annotated_parameter=True, add_noise=False
+            rewrite_annotated_parameter_with_recent=True, add_noise=False
         )
         # self.comparison_iterator = self.generate_image_couples(df_all_with_param)
         colname = self.parameters.param("Annotation", "Annotated Parameter").value()
         threshold = self.parameters.param("Annotation", "Threshold").value()
         unique_df2 = unique_df2[unique_df2[colname] < threshold]
+        return unique_df2, colname, threshold
+
+
+    def init_comparison(self):
+        unique_df2, colname, threshold = self._annotated_param_and_thr_dataframe_subselection()
         self.comparison_iterator = self.generate_image_couples(unique_df2, colname)
         self._comparison_parameter_var = unique_df2[colname].var()
         self._comparison_parameter_std = unique_df2[colname].std()
@@ -595,6 +600,31 @@ class MicrAnt:
     #     df = pd.DataFrame([list(data.values())], columns=list(data.keys()))
     #     logger.debug(f"Unique values types {np.unique(map(str, map(type, data.values())))}")
     #     self.df = self.df.append(df, ignore_index=True)
+    def show_parameter_stats(self):
+        df, colname, threshold = self._annotated_param_and_thr_dataframe_subselection()
+        # plt.figure(self.image1.fig.number)
+        print("type: ", type(self.image1.fig))
+
+        # plt.hist(df[colname])
+
+        print("df: ", df[colname])
+        # ax = self.figure.add_subplot(111)
+        ax = self.image1.axes
+        ax.clear()
+        # ax.hist(df[colname])
+        # ax.plot(data, "r-")
+        ax.set_title(f"Histogram of {colname}")
+        ax.relim()
+        ax.autoscale_view(True, True, True)
+        # self.image1.draw()
+        import seaborn as sns
+        sns.distplot(df[colname], ax=ax, norm_hist=False)
+        self.image1.draw()
+
+        # df[colname].hist(
+            # ax=self.image1.axes
+        # )
+        # self.image1.show()
 
     def generate_image_couples(self, unique_df, colname):
         anim = None
@@ -611,10 +641,20 @@ class MicrAnt:
             ann_id = row["Annotation ID"]
             pth = row["File Path"]
             if prev_img is not None and actu_img is not None:
+                self.image1.axes.clear()
+                # ax1 = self.image1.axes
+                # ax1.clear()
+                # ax1.hist(df[colname])
+                # 1ax.plot(data, "r-")
+                # ax1.set_title("Histogram")
+                # ax1.relim()
+                # ax1.autoscale_view(True, True, True)
+                # self.image1.draw()
                 self.image1.imshow(
                     prev_img,
                     title=f"{prev_row['File Name']}, {prev_row['Annotation ID']}",
                 )
+                self.image2.axes.clear()
                 self.image2.imshow(
                     actu_img,
                     title=f"{actu_row['File Name']}, {actu_row['Annotation ID']}",
@@ -671,6 +711,11 @@ class MicrAnt:
         self.parameters.param("Right is higher").sigActivated.connect(
             self.gui_swap_image
         )
+        self.parameters.param(
+            "Annotation", "Annotated Parameter"
+        ).sigValueChanged.connect(
+            self.show_parameter_stats
+        )
 
         self.parameters.param("Processing", "Open output dir").setValue(True)
         t = ParameterTree()
@@ -700,6 +745,8 @@ class MicrAnt:
         self.image1.plot()
         self.image2 = PlotCanvas()
         self.image2.plot()
+
+        self.addToolBar(NavigationToolbar(static_canvas, self))
         # self.image1.setPixmap(QtGui.QPixmap(logo_fn).scaled(100, 100))
         # self.image1.show()
         # self.image2 = QtGui.QLabel()
@@ -724,10 +771,10 @@ class MicrAnt:
 
 class PlotCanvas(FigureCanvas):
     def __init__(self, parent=None, width=5, height=4, dpi=100):
-        fig = Figure(figsize=(width, height), dpi=dpi)
-        self.axes = fig.add_subplot(111)
+        self.fig = Figure(figsize=(width, height), dpi=dpi)
+        self.axes = self.fig.add_subplot(111)
 
-        FigureCanvas.__init__(self, fig)
+        FigureCanvas.__init__(self, self.fig)
         self.setParent(parent)
 
         FigureCanvas.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Expanding)

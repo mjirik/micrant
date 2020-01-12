@@ -13,7 +13,7 @@ def get_col_from_ann_details(df, colname):
 
 
 def get_new_parameter_table(
-    df: pd.DataFrame, colname, rewrite_annotated_parameter=False, add_noise=False
+    df: pd.DataFrame, colname, rewrite_annotated_parameter_with_recent=False, add_noise=False
 ):
     # unique_df = df.drop_duplicates(subset=["File Name", "Annotation ID"], keep="first")
     # unique_df.keys()
@@ -39,7 +39,7 @@ def get_new_parameter_table(
         noise = np.random.normal(0, sigma, len(unique_df2))
         unique_df2[colname + " recent"] += noise
     unique_df2 = unique_df2.sort_values(by=colname_recent, ascending=False)
-    if rewrite_annotated_parameter:
+    if rewrite_annotated_parameter_with_recent:
         unique_df2[colname] = unique_df2[colname_recent]
 
     return unique_df2
@@ -114,7 +114,7 @@ def add_parameter_column(df, df_micrant, colname):
     :return:
     """
     df_sni_reconstruction = get_new_parameter_table(
-        df_micrant, colname=colname, rewrite_annotated_parameter=True
+        df_micrant, colname=colname, rewrite_annotated_parameter_with_recent=True
     )
 
     dfout = df.join(
