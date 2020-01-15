@@ -71,4 +71,6 @@ def test_just_create_next_image():
     mapp.start_gui(skip_exec=True, qapp=qapp)
     mapp.set_parameter("Annotation;Annotated Parameter", "SNI")
     mapp.set_parameter("Annotation;Threshold", 2)
+    logger.debug("before gui_next_image()")
     mapp.gui_next_image()
+    logger.debug("after gui_next_image()")
