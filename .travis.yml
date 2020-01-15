@@ -84,5 +84,5 @@ install:
 # command to run tests
 # script: nosetests -v --with-coverage --cover-package=micrant
 
-script: python -m pytest --cov=micrant/
+script: python -m pytest -v --cov=micrant/
 after_success: coveralls
