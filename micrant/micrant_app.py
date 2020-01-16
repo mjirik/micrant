@@ -832,7 +832,7 @@ class PlotCanvas(FigureCanvas):
 
 def get_col_from_ann_details(df, colname):
     df[f"{colname}"] = pd.to_numeric(
-        df["Annotation Details"].str.extract(f"{colname}=(\d*\.?\d*)")[0]
+        df["Annotation Details"].str.extract(f"{colname}=" + r"(\d*\.?\d*)")[0]
     )
     return df
 
