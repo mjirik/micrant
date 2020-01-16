@@ -5,16 +5,17 @@
 # logger = logging.getLogger(__name__)
 from loguru import logger
 import pytest
-import os.path
 import micrant
 import micrant.micrant_app
 from PyQt5 import QtWidgets
 import io3d
-import sys
 from pathlib import Path
-
-path_to_script = os.path.dirname(os.path.abspath(__file__))
-
+import os
+import sys
+import os.path as op
+path_to_script = op.dirname(op.abspath(__file__))
+pth = op.join(path_to_script, "../../scaffan/")
+sys.path.insert(0, pth)
 
 def inc(x):
     return x + 1

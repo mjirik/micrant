@@ -3,9 +3,13 @@
 """
 Modul is used for GUI of Lisa
 """
-import os.path as op
 
 from loguru import logger
+import sys
+import os.path as op
+path_to_script = op.dirname(op.abspath(__file__))
+pth = op.join(path_to_script, "../../scaffan/")
+sys.path.insert(0, pth)
 
 from PyQt5 import QtGui
 
@@ -27,14 +31,13 @@ import scaffan
 from scaffan import image
 from exsu.report import Report
 import sys
-import os.path as op
 import datetime
 from pathlib import Path
 import io3d.misc
 from io3d import cachefile
 import micrant
-import json
-import time
+# import json
+# import time
 import platform
 from typing import List, Union
 import exsu
@@ -604,6 +607,8 @@ class MicrAnt:
     #     self.df = self.df.append(df, ignore_index=True)
     def show_parameter_stats(self):
         df, colname, threshold = self._annotated_param_and_thr_dataframe_subselection()
+        if len(df) < 3:
+            return
         # plt.figure(self.image1.fig.number)
         # print("type: ", type(self.image1.fig))
 
@@ -633,6 +638,8 @@ class MicrAnt:
         ax.autoscale_view(True, True, True)
         # self.image1.draw()
         import seaborn as sns
+        print("df: ", df)
+        logger.debug(f"len df: {len(df)}")
         sns.boxplot(data=df, x=colname, y="File Name", ax=ax, orient="h")
         self.image2.draw()
         # df[colname].hist(
