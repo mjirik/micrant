@@ -525,7 +525,7 @@ class MicrAnt:
         self.colname = colname
         method = 'bubble'
         if method == "bubble":
-            self.comparison_iterator = self.bubble_generate_image_couples(unique_df2, colname)
+            self.comparison_iterator = self.bubble_generate_image_couples()
             self._right_is_higher_callback = self.bubble_right_is_higher_callback
             self._left_is_higher_callback = None
         else:
