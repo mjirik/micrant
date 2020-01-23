@@ -49,6 +49,7 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 from pyqtgraph.parametertree import Parameter, ParameterTree
 import pyqtgraph.widgets
 from . import image_sort_tools as imst
+from . import couple_generator
 
 
 class MicrAnt:
@@ -249,6 +250,8 @@ class MicrAnt:
         self._n_readed_regions = 0
         self._n_files = 0
         self._n_files_without_proper_color = 0
+        self._right_is_higher_callback = None
+        self._left_is_higher_callback = None
 
     def set_parameter(self, param_path, value, parse_path=True):
         """
@@ -518,7 +521,15 @@ class MicrAnt:
 
     def init_comparison(self):
         unique_df2, colname, threshold = self._annotated_param_and_thr_dataframe_subselection()
-        self.comparison_iterator = self.generate_image_couples(unique_df2, colname)
+        self.unique_df = unique_df2
+        self.colname = colname
+        method = 'bubble'
+        if method == "bubble":
+            self.comparison_iterator = self.bubble_generate_image_couples(unique_df2, colname)
+            self._right_is_higher_callback = self.bubble_right_is_higher_callback
+            self._left_is_higher_callback = None
+        else:
+            pass
         self._comparison_parameter_var = unique_df2[colname].var()
         self._comparison_parameter_std = unique_df2[colname].std()
         self._comparison_len = len(unique_df2)
@@ -546,11 +557,17 @@ class MicrAnt:
             return None, None
             # if StopIteration is raised, break from loop
 
-    def gui_next_image(self):
+    def gui_left_is_higher(self):
         row, prev_row = self.gui_show_next_image()
+        if self._left_is_higher_callback != None:
+            self._left_is_higher_callback(row, prev_row)
 
-    def gui_swap_image(self):
+    def gui_right_is_higher(self):
         prev_row, prev_prev_row = self.gui_show_next_image()
+        if self._right_is_higher_callback != None:
+            self._right_is_higher_callback(prev_row, prev_prev_row)
+
+    def bubble_right_is_higher_callback(self, prev_row, prev_prev_row):
         # logger.debug(f"swap 1\n{prev_row}")
         # logger.debug(f"swap 2\n{prev_prev_row}")
         # pokud byla minula dvojice nic
@@ -647,7 +664,10 @@ class MicrAnt:
         # )
         # self.image1.show()
 
-    def generate_image_couples(self, unique_df, colname):
+
+    def bubble_generate_image_couples(self):
+        unique_df = self.unique_df
+        colname = self.colname
         anim = None
         prev_pth = ""
         prev_prev_row = None
@@ -663,14 +683,6 @@ class MicrAnt:
             pth = row["File Path"]
             if prev_img is not None and actu_img is not None:
                 self.image1.axes.clear()
-                # ax1 = self.image1.axes
-                # ax1.clear()
-                # ax1.hist(df[colname])
-                # 1ax.plot(data, "r-")
-                # ax1.set_title("Histogram")
-                # ax1.relim()
-                # ax1.autoscale_view(True, True, True)
-                # self.image1.draw()
                 self.image1.imshow(
                     prev_img,
                     title=f"{prev_row['File Name']}, {prev_row['Annotation ID']}",
@@ -727,10 +739,10 @@ class MicrAnt:
         ).sigActivated.connect(self.select_output_spreadsheet_gui)
         self.parameters.param("Save").sigActivated.connect(self.run_lobuluses)
         self.parameters.param("Left is higher").sigActivated.connect(
-            self.gui_next_image
+            self.gui_left_is_higher
         )
         self.parameters.param("Right is higher").sigActivated.connect(
-            self.gui_swap_image
+            self.gui_right_is_higher
         )
         self.parameters.param(
             "Annotation", "Annotated Parameter"
