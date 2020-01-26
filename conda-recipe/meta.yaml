@@ -45,7 +45,6 @@ requirements:
 
   run:
     - python
-    - scaffan=3
     - {{ pin_compatible('scaffan', max_pin='x.x') }}
     # - numpy
     # - pyqt 4.11.* # [not win]
