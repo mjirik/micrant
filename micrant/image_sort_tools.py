@@ -38,7 +38,7 @@ def get_new_parameter_table(
         )
         noise = np.random.normal(0, sigma, len(unique_df2))
         unique_df2[colname + " recent"] += noise
-    unique_df2 = unique_df2.sort_values(by=colname_recent, ascending=False)
+    unique_df2 = unique_df2.sort_values(by=colname_recent, ascending=True)
     if rewrite_annotated_parameter_with_recent:
         unique_df2[colname] = unique_df2[colname_recent]
 
@@ -50,7 +50,7 @@ def get_parameter_from_df(df, colname):
     Pick up parameter for non processed data from Annotation Details and keep parameter column in all other rows.
     """
     df_nothing = get_col_from_ann_details(
-        df[df["Annotation Method"] == "nothing"], "SNI"
+        df[df["Annotation Method"] == "nothing"], colname
     )
     df_not_nothing = df[df["Annotation Method"] != "nothing"]
     df_all_with_param = pd.concat(

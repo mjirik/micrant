@@ -154,7 +154,8 @@ class MicrAnt:
                 "type": "group",
                 "children": [
                     {"name": "Annotated Parameter", "type": "str", "value": "",},
-                    {"name": "Threshold", "type": "float", "value": 0},
+                    {"name": "Upper Threshold", "type": "float", "value": 2},
+                    {"name": "Lower Threshold", "type": "float", "value": 0},
                 ],
             },
             {
@@ -218,14 +219,14 @@ class MicrAnt:
                 "tip": "Used when Set Left is clicked",
             },
             {
-                "name": "Left is higher",
+                "name": "Left is lower",
                 "type": "action",
-                "tip": "Annotated parameter on left image is higher than on right image",
+                "tip": "Annotated parameter on left image is lower than on right image",
             },
             {
-                "name": "Right is higher",
+                "name": "Right is lower",
                 "type": "action",
-                "tip": "Annotated parameter on right image is higher than on left image",
+                "tip": "Annotated parameter on right image is lower than on left image",
             },
             {"name": "Save", "type": "action"},
             # {"name": "Run", "type": "action"},
@@ -250,8 +251,8 @@ class MicrAnt:
         self._n_readed_regions = 0
         self._n_files = 0
         self._n_files_without_proper_color = 0
-        self._right_is_higher_callback = None
-        self._left_is_higher_callback = None
+        self._right_is_lower_callback = None
+        self._left_is_lower_callback = None
 
     def set_parameter(self, param_path, value, parse_path=True):
         """
@@ -514,25 +515,39 @@ class MicrAnt:
         )
         # self.comparison_iterator = self.generate_image_couples(df_all_with_param)
         colname = self.parameters.param("Annotation", "Annotated Parameter").value()
-        threshold = self.parameters.param("Annotation", "Threshold").value()
-        unique_df2 = unique_df2[unique_df2[colname] < threshold]
-        return unique_df2, colname, threshold
+        upper_threshold = self.parameters.param("Annotation", "Upper Threshold").value()
+        lower_threshold = self.parameters.param("Annotation", "Lower Threshold").value()
+        unique_df2 = unique_df2[(unique_df2[colname] > lower_threshold) &(unique_df2[colname] < upper_threshold)]
+        return unique_df2, colname, lower_threshold, upper_threshold
 
 
     def init_comparison(self):
-        unique_df2, colname, threshold = self._annotated_param_and_thr_dataframe_subselection()
-        self.unique_df = unique_df2
+        unique_df, colname, _, _= self._annotated_param_and_thr_dataframe_subselection()
+        self.unique_df = unique_df
         self.colname = colname
+        ln = len(unique_df)
         method = 'bubble'
+        # method = 'quick'
         if method == "bubble":
-            self.comparison_iterator = self.bubble_generate_image_couples()
-            self._right_is_higher_callback = self.bubble_right_is_higher_callback
-            self._left_is_higher_callback = None
+
+            # couple_ids = list(zip(range(0, ln - 1), range(1, ln)))
+            couple_ids = zip(range(0, ln - 1), range(1, ln))
+            self.couple_id_generator = couple_ids
+            self.comparison_iterator = self.show_image_couples_generator()
+            self._right_is_lower_callback = self.bubble_right_is_lower_callback
+            self._left_is_lower_callback = None
+        elif method == "quick":
+            id_array = list(range(0, len(unique_df)))
+            self._quick_couple_generator = couple_generator.QuickCoupleGenerator(id_array)
+            self.couple_id_generator = self._quick_couple_generator.image_couple_generator()
+            self.comparison_iterator = self.show_image_couples_generator()
+            self._right_is_lower_callback = self._quick_couple_generator.first_is_lower()
+            self._left_is_lower_callback = self._quick_couple_generator.first_is_higher()
         else:
-            pass
-        self._comparison_parameter_var = unique_df2[colname].var()
-        self._comparison_parameter_std = unique_df2[colname].std()
-        self._comparison_len = len(unique_df2)
+            raise ValueError("Unknown couple selection method")
+        self._comparison_parameter_var = unique_df[colname].var()
+        self._comparison_parameter_std = unique_df[colname].std()
+        self._comparison_len = len(unique_df)
         self._comparison_i = 0
 
     def gui_show_next_image(self):
@@ -557,29 +572,32 @@ class MicrAnt:
             return None, None
             # if StopIteration is raised, break from loop
 
-    def gui_left_is_higher(self):
+    def gui_left_is_lower(self):
         row, prev_row = self.gui_show_next_image()
-        if self._left_is_higher_callback != None:
-            self._left_is_higher_callback(row, prev_row)
+        if self._left_is_lower_callback != None:
+            self._left_is_lower_callback(row, prev_row)
 
-    def gui_right_is_higher(self):
+    def gui_right_is_lower(self):
         prev_row, prev_prev_row = self.gui_show_next_image()
-        if self._right_is_higher_callback != None:
-            self._right_is_higher_callback(prev_row, prev_prev_row)
+        if self._right_is_lower_callback != None:
+            self._right_is_lower_callback(prev_row, prev_prev_row)
 
-    def bubble_right_is_higher_callback(self, prev_row, prev_prev_row):
-        # logger.debug(f"swap 1\n{prev_row}")
-        # logger.debug(f"swap 2\n{prev_prev_row}")
+    def bubble_right_is_lower_callback(self, left_row, right_row):
+        logger.debug(f"swap 1\n{left_row}")
+        logger.debug(f"swap 2\n{right_row}")
         # pokud byla minula dvojice nic
-        if prev_prev_row is not None:
+        if right_row is not None:
             colname = self.parameters.param("Annotation", "Annotated Parameter").value()
-            add1 = np.random.rand() * 0.2 * (self._comparison_parameter_std)
-            add2 = -np.random.rand() * 0.2 * (self._comparison_parameter_std)
+            # add1 = np.random.rand() * 0.2 * (self._comparison_parameter_std)
+            # add2 = -np.random.rand() * 0.2 * (self._comparison_parameter_std)
+            add1=0.
+            add2=0.
+            multiplicator = 0.5 + 0.5 * np.random.rand()
             self._set_new_swap_value_for_first_row(
-                prev_row, prev_prev_row, colname, add_offset=add1
+                left_row, right_row, colname, add_offset=add1, multiplicator=multiplicator
             )
             self._set_new_swap_value_for_first_row(
-                prev_prev_row, prev_row, colname, add_offset=add2
+                right_row, left_row, colname, add_offset=add2, multiplicator=multiplicator
             )
 
     def gui_set_left_image(self):
@@ -592,16 +610,19 @@ class MicrAnt:
         self.report.add_cols_to_actual_row({"Annotation Method": "set", colname: value})
         self.report.finish_actual_row()
 
-    def _set_new_swap_value_for_first_row(self, row, prev_row, colname, add_offset=0):
+    def _set_new_swap_value_for_first_row(self, row, prev_row, colname, add_offset=0, multiplicator=1.0):
 
         value1 = row[colname]
         value2 = prev_row[colname]
-        v1new = value1 + (value2 - value1) * 1.0 + add_offset
+        v1new = value1 + ((value2 - value1) * multiplicator) + add_offset
         self.add_std_data_to_row(
             inpath=Path(row["File Path"]), annotation_id=row["Annotation ID"]
         )
         self.report.add_cols_to_actual_row(
             {
+                # "Annotation Color": self.parameters.param(
+                #     "Input", "Annotation Color"
+                # ).value(),
                 "Annotation Method": "swap",
                 "Former Annotation Parameter Value": value1,
                 "Compared Annotation Parameter Value": value2,
@@ -623,7 +644,7 @@ class MicrAnt:
     #     logger.debug(f"Unique values types {np.unique(map(str, map(type, data.values())))}")
     #     self.df = self.df.append(df, ignore_index=True)
     def show_parameter_stats(self):
-        df, colname, threshold = self._annotated_param_and_thr_dataframe_subselection()
+        df, colname, lower_thr, upper_thr = self._annotated_param_and_thr_dataframe_subselection()
         if len(df) < 3:
             return
         # plt.figure(self.image1.fig.number)
@@ -664,58 +685,92 @@ class MicrAnt:
         # )
         # self.image1.show()
 
-
-    def bubble_generate_image_couples(self):
+    def show_image_couples_generator(self):
+        """
+        internally using couple id generator
+        :return:
+        """
         unique_df = self.unique_df
         colname = self.colname
-        anim = None
-        prev_pth = ""
-        prev_prev_row = None
-        prev_prev_img = None
-        prev_row = None
-        prev_img = None
-        actu_row = None
-        actu_img = None
+        # anim = None
+        # prev_pth = ""
+        # prev_prev_row = None
+        # prev_prev_img = None
+        # row1 = None
+        # img1 = None
+        # row2 = None
+        # img2 = None
         # futu_row = None
         # futu_img = None
-        for index, row in unique_df.iterrows():
+        cache_size = 10
+        cache_ids = []
+        cache_data = []
+
+        def get_row_and_image(row_id):
+            row = unique_df.iloc[row_id]
+
             ann_id = row["Annotation ID"]
             pth = row["File Path"]
-            if prev_img is not None and actu_img is not None:
+            if row_id in cache_ids:
+                img = cache_data[cache_ids.index(row_id)]
+            else:
+                anim = scaffan.image.AnnotatedImage(pth)
+                img = imst.get_image_from_ann_id(anim, ann_id, level=level)
+                cache_ids.append(row_id)
+                cache_data.append(img)
+            return row, img
+        # ln = len(unique_df)
+        # couple_ids = list(zip(range(0, ln - 1), range(1, ln)))
+        # for index, row in unique_df.iterrows():
+        for row_id1, row_id2 in self.couple_id_generator:  # couple_ids:
+            level = self.parameters.param("Processing", "Image Level").value()
+
+
+            row1, img1 = get_row_and_image(row_id1)
+            row2, img2 = get_row_and_image(row_id2)
+
+            # if prev_img is not None and actu_img is not None:
+            if True:
                 self.image1.axes.clear()
                 self.image1.imshow(
-                    prev_img,
-                    title=f"{prev_row['File Name']}, {prev_row['Annotation ID']}",
+                    img1,
+                    title=f"{row1['File Name']}, {row1['Annotation ID']}",
                 )
                 self.image2.axes.clear()
                 self.image2.imshow(
-                    actu_img,
-                    title=f"{actu_row['File Name']}, {actu_row['Annotation ID']}",
+                    img2,
+                    title=f"{row2['File Name']}, {row2['Annotation ID']}",
                 )
                 self.qapp.processEvents()
-                logger.debug(f"left: {colname}={prev_row[colname]}")
-                logger.debug(f"right: {colname}={actu_row[colname]}")
+                logger.debug(f"left: {colname}={row1[colname]}")
+                logger.debug(f"right: {colname}={row2[colname]}")
 
-            if prev_pth != pth:
-                anim = scaffan.image.AnnotatedImage(pth)
-            level = self.parameters.param("Processing", "Image Level").value()
-            prev_pth = pth
-            futu_img = imst.get_image_from_ann_id(anim, ann_id, level=level)
-            futu_row = row
+            logger.debug(f"cache size: {len(cache_ids)}")
+            while len(cache_ids) > cache_size:
+                cache_ids.pop(0)
+                cache_data.pop(0)
+            yield row1, img1, row2, img2
 
-            # print(f"type actu_row {type(actu_row)} prev row {type(prev_row)}")
-            logger.debug(
-                f"next image will be: {row['File Name']}, {row['Annotation ID']}"
-            )
-            if prev_row is not None:
-                # yield actu_row, actu_img, prev_row, prev_img
-                yield prev_row, prev_img, prev_prev_row, prev_prev_img
-            prev_prev_row = prev_row
-            prev_prev_img = prev_img
-            prev_row = actu_row
-            prev_img = actu_img
-            actu_row = futu_row
-            actu_img = futu_img
+            # if prev_pth != pth:
+            #     anim = scaffan.image.AnnotatedImage(pth)
+            # level = self.parameters.param("Processing", "Image Level").value()
+            # prev_pth = pth
+            # futu_img = imst.get_image_from_ann_id(anim, ann_id, level=level)
+            # futu_row = row
+            #
+            # # print(f"type actu_row {type(actu_row)} prev row {type(prev_row)}")
+            # logger.debug(
+            #     f"next image will be: {row['File Name']}, {row['Annotation ID']}"
+            # )
+            # if prev_row is not None:
+            #     # yield actu_row, actu_img, prev_row, prev_img
+            #     yield prev_row, prev_img, prev_prev_row, prev_prev_img
+            # prev_prev_row = prev_row
+            # prev_prev_img = prev_img
+            # prev_row = actu_row
+            # prev_img = actu_img
+            # actu_row = futu_row
+            # actu_img = futu_img
 
             # print(f"ann ID={ann_id}")
 
@@ -738,11 +793,11 @@ class MicrAnt:
             "Output", "Select Common Spreadsheet File"
         ).sigActivated.connect(self.select_output_spreadsheet_gui)
         self.parameters.param("Save").sigActivated.connect(self.run_lobuluses)
-        self.parameters.param("Left is higher").sigActivated.connect(
-            self.gui_left_is_higher
+        self.parameters.param("Left is lower").sigActivated.connect(
+            self.gui_left_is_lower
         )
-        self.parameters.param("Right is higher").sigActivated.connect(
-            self.gui_right_is_higher
+        self.parameters.param("Right is lower").sigActivated.connect(
+            self.gui_right_is_lower
         )
         self.parameters.param(
             "Annotation", "Annotated Parameter"
