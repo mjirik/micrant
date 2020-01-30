@@ -6,8 +6,8 @@
 from loguru import logger
 from micrant import timsort
 
-def test_timsort():
-    cg = timsort.TimCoupleGenerator()
+# def test_timsort():
+#     cg = timsort.TimCoupleGenerator()
 #
 #     for couple in cg.timsort([5,6,8, 1, 3]):
 #         i1, i2 = couple
