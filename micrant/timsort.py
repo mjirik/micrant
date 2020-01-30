@@ -7,6 +7,9 @@ class TimCoupleGenerator():
     def __init__(self):
         self.sorted_array = None
         self.left_is_lower = True
+        self._insertion_sort_retval = None
+        self._binary_search_retval = None
+        self._merge_retval = None
 
     def binary_search(self, the_array, item, start, end):
         if start == end:
@@ -26,13 +29,15 @@ class TimCoupleGenerator():
         yield the_array[mid] , item
         # if the_array[mid] < item:
         if self.left_is_lower:
-                return self.binary_search(the_array, item, mid + 1, end)
+            yield from self.binary_search(the_array, item, mid + 1, end)
+            return self._binary_search_retval
 
         else :
             yield item, the_array[mid]
             if self.left_is_lower:
             # if the_array[mid] > item:
-                return self.binary_search(the_array, item, start, mid - 1)
+                yield from self.binary_search(the_array, item, start, mid - 1)
+                return self._binary_search_retval
 
             else:
                 return mid
@@ -48,8 +53,12 @@ class TimCoupleGenerator():
         l = len(the_array)
         for index in range(1, l):
             value = the_array[index]
-            pos = self.binary_search(the_array, value, 0, index - 1)
+            yield from self.binary_search(the_array, value, 0, index - 1)
+            pos = self._binary_search_retval
             the_array = the_array[:pos] + [value] + the_array[pos:index] + the_array[index + 1:]
+
+        self._insertion_sort_retval = the_array
+
         return the_array
 
     # def insertion_sort(the_array):
@@ -73,11 +82,14 @@ class TimCoupleGenerator():
         if not right:
             return left
         # TODO yield
+        print(f"types {type(left)}, {type(right)}")
         yield left[0], right[0]
         if self.left_is_lower:
+            yield from self.merge(left[1:], right)
         # if left[0] < right[0]:
-                return [left[0]] + self.merge(left[1:], right)
-        return [right[0]] + self.merge(left, right[1:])
+            return [left[0]] + self._merge_retval
+        yield from self.merge(left, right[1:])
+        return [right[0]] + self._merge_retval
 
 
     def timsort(self, the_array):
@@ -111,11 +123,16 @@ class TimCoupleGenerator():
 
         # for every item in runs, append it using insertion sort
         for item in runs:
-            sorted_runs.append(self.insertion_sort(item))
+            yield from self.insertion_sort(item)
+            sorted_runs.append(self._insertion_sort_retval)
 
+        print("=====")
         # for every run in sorted_runs, merge them
         sorted_array = []
+        print(f"sorted array: {sorted_array}")
         for run in sorted_runs:
+
+            print(f"run: {run}")
             sorted_array = self.merge(sorted_array, run)
 
         # print(sorted_array)
