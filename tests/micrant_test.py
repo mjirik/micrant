@@ -21,12 +21,6 @@ sys.path.insert(0, pth)
 def inc(x):
     return x + 1
 
-
-# @pytest.mark.interactive
-# # @pytest.mark.slow
-# def test_answer():
-#     assert inc(3) == 5
-
 TEST_XLSX = Path("test.xlsx")
 
 global_qapp = QtWidgets.QApplication(sys.argv)
@@ -42,7 +36,7 @@ def test_just_create_object_and_set_parameter():
     mapp = micrant.micrant_app.MicrAnt()
     xfn1 = mapp.parameters.param("Output", "Common Spreadsheet File").value()
     assert len(xfn1) > 0
-    mapp.set_parameter("Output;Common Spreadsheet File", TEST_XLSX)
+    mapp.set_parameter("Output;Common Spreadsheet File", str(TEST_XLSX))
     xfn2 = mapp.parameters.param("Output", "Common Spreadsheet File").value()
     assert len(xfn2) > 0
     assert xfn2 != xfn1
