@@ -162,7 +162,7 @@ def nogui(input_path, color, output_path, log_level, params):
         logger.debug(f"color={color}")
         mainapp.set_annotation_color_selection(color)
 
-    mainapp.run_lobuluses()
+    mainapp.save_data()
 
 
 # def install():

@@ -13,6 +13,7 @@ from pathlib import Path
 import os
 import sys
 import os.path as op
+import pandas as pd
 path_to_script = op.dirname(op.abspath(__file__))
 pth = op.join(path_to_script, "../../scaffan/")
 sys.path.insert(0, pth)
@@ -41,7 +42,7 @@ def test_just_create_object_and_set_parameter():
     mapp = micrant.micrant_app.MicrAnt()
     xfn1 = mapp.parameters.param("Output", "Common Spreadsheet File").value()
     assert len(xfn1) > 0
-    mapp.set_parameter("Output;Common Spreadsheet File", "test.xlsx")
+    mapp.set_parameter("Output;Common Spreadsheet File", TEST_XLSX)
     xfn2 = mapp.parameters.param("Output", "Common Spreadsheet File").value()
     assert len(xfn2) > 0
     assert xfn2 != xfn1
@@ -57,7 +58,7 @@ def test_just_add_image():
     fn = io3d.datasets.join_path(
         "medical", "orig", "sample_data", "SCP003", "SCP003.ndpi", get_root=True
     )
-    mapp.set_parameter("Output;Common Spreadsheet File", TEST_XLSX)
+    mapp.set_common_spreadsheet_file(TEST_XLSX)
     mapp.set_annotation_color_selection("#0000FF")
     mapp.set_input_file(fn)
     # logger.debug("")
@@ -74,7 +75,7 @@ def test_just_create_next_image():
     # qapp = QtWidgets.QApplication(sys.argv)
     qapp = global_qapp
     mapp = micrant.micrant_app.MicrAnt()
-    mapp.set_parameter("Output;Common Spreadsheet File", TEST_XLSX)
+    mapp.set_common_spreadsheet_file(TEST_XLSX)
 
     xfn = mapp.parameters.param("Output", "Common Spreadsheet File").value()
     logger.debug(f"Common Spreadsheet File {xfn}")
@@ -90,10 +91,7 @@ def test_annotation_left_right_and_set():
     qapp = global_qapp
     # qapp = QtWidgets.QApplication(sys.argv)
     mapp = micrant.micrant_app.MicrAnt()
-    mapp.set_parameter("Output;Common Spreadsheet File", TEST_XLSX)
-
-    xfn = mapp.parameters.param("Output", "Common Spreadsheet File").value()
-    logger.debug(f"Common Spreadsheet File {xfn}")
+    mapp.set_common_spreadsheet_file(TEST_XLSX)
     mapp.start_gui(skip_exec=True, qapp=qapp)
     mapp.set_parameter("Annotation;Annotated Parameter", "SNI")
     mapp.set_parameter("Annotation;Lower Threshold", 0)
@@ -111,3 +109,9 @@ def test_annotation_left_right_and_set():
     assert mapp.report.df["SNI"].iat[2] == 1.5
     assert lrow["Annotation ID"] == mapp.report.df["Annotation ID"].iat[2]
     assert lrow["File Name"] == mapp.report.df["File Name"].iat[2]
+
+
+    df1 = pd.read_excel(TEST_XLSX)
+    mapp.save_data()
+    df2 = pd.read_excel(TEST_XLSX)
+    assert len(df1) < len(df2)

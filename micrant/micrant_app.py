@@ -347,7 +347,7 @@ class MicrAnt:
         logger.debug(msg)
         self.parameters.param("Input", "Data Info").setValue(msg)
 
-    def run_lobuluses(self):
+    def save_data(self):
         logger.debug(self.report.df)
         self._dump_report()
         # self.report.init()
@@ -886,7 +886,7 @@ class MicrAnt:
         self.parameters.param(
             "Output", "Select Common Spreadsheet File"
         ).sigActivated.connect(self.select_output_spreadsheet_gui)
-        self.parameters.param("Save").sigActivated.connect(self.run_lobuluses)
+        self.parameters.param("Save").sigActivated.connect(self.save_data)
         self.parameters.param("Comparative Annotation", "Left is lower").sigActivated.connect(
             self.gui_left_is_lower_and_show_next
         )
