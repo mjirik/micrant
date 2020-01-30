@@ -1,7 +1,7 @@
 # /usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Modul is used for GUI of Lisa
+CLI for micrant application. It is usefull mainly for adding ndpi files to common xlsx file
 """
 
 from loguru import logger
@@ -16,7 +16,7 @@ import ast
 # print("start 5")
 # print("start 6")
 
-from scaffan import algorithm
+from micrant import micrant_app
 from . import app_tools
 from micrant import micrant_app
 
@@ -50,7 +50,7 @@ def run(ctx, *args, **kwargs):
     type=click.Path(),
 )
 def set(common_spreadsheet_file=None):
-    mainapp = algorithm.Scaffan()
+    mainapp = micrant_app.MicrAnt()
     if common_spreadsheet_file is not None:
         mainapp.set_common_spreadsheet_file(path=common_spreadsheet_file)
         logger.info(f"Common spreadsheet file path is : {common_spreadsheet_file}")
@@ -118,10 +118,10 @@ def install():
     "--color", "-c", type=str, help="Annotation collor in hexa (#0000FF)", default=None,
 )
 @click.option(
-    "--output-path",
+    "--common-xlsx",
     "-o",
     type=click.Path(),
-    help="Path to output directory with video files.",
+    help="Path to common xlsx file.",
     default=None,
 )
 @click.option(
@@ -140,27 +140,36 @@ def install():
     help='Set parameter. First argument is path to parameter separated by ";". Second is the value.'
     "python -m scaffan gui -p Processing,Show True",
 )
-def nogui(input_path, color, output_path, log_level, params):
+@click.option("--print-params", "-pp", is_flag=True, help="Print parameters")
+def nogui(input_path, color, common_xlsx, log_level, params, print_params):
     if log_level is not None:
         i = logger.add(level=log_level)
     logger.debug(
-        f"input path={input_path} color={color}, output_path={output_path}, params={params}"
+        f"input path={input_path} color={color}, output_path={common_xlsx}, params={params}"
     )
     mainapp = micrant_app.MicrAnt()
+    if print_params:
+        import pprint
+
+        pprint.pprint(mainapp.parameters_to_dict())
+        exit()
     logger.debug(f"Micrant created")
     app_tools.set_parameters_by_path(mainapp.parameters, params)
     # for param in params:
     #     logger.debug(f"param={param}")
     #     mainapp.parameters.param(*param[0].split(";")).setValue(ast.literal_eval(param[1]))
 
-    logger.debug("before input file")
-    if input_path is not None:
-        mainapp.set_input_file(input_path)
-    if output_path is not None:
-        mainapp.set_output_dir(output_path)
+    logger.debug(f"common xlsx: {common_xlsx}")
+    if common_xlsx is not None:
+        mainapp.set_common_spreadsheet_file(common_xlsx)
+    # logger.debug(f"common xlsx: {mainapp.report.com}")
     if color is not None:
         logger.debug(f"color={color}")
         mainapp.set_annotation_color_selection(color)
+    logger.debug(f"before input file: {input_path}")
+    if input_path is not None:
+        logger.debug(f"Setting new input file from CLI: {input_path}")
+        mainapp.set_input_file(input_path)
 
     mainapp.save_data()
 

@@ -456,6 +456,7 @@ class MicrAnt:
         excel_path = Path(common_spreadsheet_file)
         # print("we will write to excel", excel_path)
         filename = str(excel_path)
+        logger.debug(f"Saving to excel file: {filename}")
         exsu.report.append_df_to_excel(filename, self.report.df)
         self.report.init()
 
@@ -524,9 +525,18 @@ class MicrAnt:
         self.set_common_spreadsheet_file(fn)
 
     def set_common_spreadsheet_file(self, path):
+        path = str(path)
+        logger.info(" -- common_spreadsheet_file set to {}".format(path))
         fnparam = self.parameters.param("Output", "Common Spreadsheet File")
         fnparam.setValue(path)
+        logger.info(" --  -- common_spreadsheet_file set to {}".format(path))
         self.cache.update("common_spreadsheet_file", path)
+        # try:
+        #     self.cache.update("common_spreadsheet_file", path)
+        # except Exception as e:
+        #     logger.debug("Problem with cache update")
+        #     import traceback
+        #     logger.debug(traceback.format_exc())
         logger.info("common_spreadsheet_file set to {}".format(path))
 
     # def gui_set_image1(self):
