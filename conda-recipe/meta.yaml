@@ -42,10 +42,13 @@ requirements:
     - setuptools
     # - { pin_compatible('imma', max_pin='x.x') }
     - {{ pin_compatible('scaffan', max_pin='x.x') }}
+    - {{ pin_compatible('seaborn', max_pin='x.x') }}
+    -
 
   run:
     - python
     - {{ pin_compatible('scaffan', max_pin='x.x') }}
+    - {{ pin_compatible('seaborn', max_pin='x.x') }}
     # - numpy
     # - pyqt 4.11.* # [not win]
     # - pyqt 4.12.2 # [win]
