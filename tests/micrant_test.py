@@ -77,9 +77,27 @@ def test_just_create_next_image():
     mapp.gui_left_is_lower_and_show_next()
     assert len(mapp.report.df) == 0
 
+def test_annotation_left_right_and_set():
+    qapp = QtWidgets.QApplication(sys.argv)
+    mapp = micrant.micrant_app.MicrAnt()
+    mapp.set_parameter("Output;Common Spreadsheet File", TEST_XLSX)
+
+    xfn = mapp.parameters.param("Output", "Common Spreadsheet File").value()
+    logger.debug(f"Common Spreadsheet File {xfn}")
+    mapp.start_gui(skip_exec=True, qapp=qapp)
+    mapp.set_parameter("Annotation;Annotated Parameter", "SNI")
+    mapp.set_parameter("Annotation;Lower Threshold", 0)
+    mapp.set_parameter("Annotation;Upper Threshold", 2)
+    logger.debug("before gui_next_image()")
+    mapp.gui_left_is_lower_and_show_next()
+    assert len(mapp.report.df) == 0
+
     mapp.gui_right_is_lower_and_show_next()
     assert len(mapp.report.df) == 2
 
+    lrow = mapp._row1
     mapp.gui_set_left_75_percent_and_show_next()
     assert len(mapp.report.df) == 3
     assert mapp.report.df["SNI"].iat[2] == 1.5
+    assert lrow["Annotation ID"] == mapp.report.df["Annotation ID"].iat[2]
+    assert lrow["File Name"] == mapp.report.df["File Name"].iat[2]
