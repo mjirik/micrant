@@ -28,6 +28,8 @@ def inc(x):
 
 TEST_XLSX = Path("test.xlsx")
 
+global_qapp = QtWidgets.QApplication(sys.argv)
+
 
 def test_just_create_object():
     mapp = micrant.micrant_app.MicrAnt()
@@ -35,7 +37,7 @@ def test_just_create_object():
     assert len(xfn) > 0
 
 
-def test_just_create_object():
+def test_just_create_object_and_set_parameter():
     mapp = micrant.micrant_app.MicrAnt()
     xfn1 = mapp.parameters.param("Output", "Common Spreadsheet File").value()
     assert len(xfn1) > 0
@@ -61,9 +63,16 @@ def test_just_add_image():
     # logger.debug("")
     assert TEST_XLSX.exists()
 
+def test_just_run_application_without_exec():
+    # qapp = QtWidgets.QApplication(sys.argv)
+    qapp = global_qapp
+    mapp = micrant.micrant_app.MicrAnt()
+    mapp.start_gui(qapp=qapp, skip_exec=True)
+
 
 def test_just_create_next_image():
-    qapp = QtWidgets.QApplication(sys.argv)
+    # qapp = QtWidgets.QApplication(sys.argv)
+    qapp = global_qapp
     mapp = micrant.micrant_app.MicrAnt()
     mapp.set_parameter("Output;Common Spreadsheet File", TEST_XLSX)
 
@@ -78,7 +87,8 @@ def test_just_create_next_image():
     assert len(mapp.report.df) == 0
 
 def test_annotation_left_right_and_set():
-    qapp = QtWidgets.QApplication(sys.argv)
+    qapp = global_qapp
+    # qapp = QtWidgets.QApplication(sys.argv)
     mapp = micrant.micrant_app.MicrAnt()
     mapp.set_parameter("Output;Common Spreadsheet File", TEST_XLSX)
 
