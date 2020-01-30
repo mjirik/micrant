@@ -29,6 +29,7 @@ from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import scaffan
 from scaffan import image
+from scaffan import image_intensity_rescale_pyqtgraph
 from exsu.report import Report
 import sys
 import datetime
@@ -70,6 +71,7 @@ class MicrAnt:
         # self.glcm_textures.set_report(self.report)
         # self.skeleton_analysis.set_report(self.report)
         # self.evaluation.report = self.report
+        self.intensity_rescale = image_intensity_rescale_pyqtgraph.RescaleIntensityPercentilePQG()
         self.win: QtGui.QWidget = None
         # self.win = None
         self.cache = cachefile.CacheFile("~/.micrant_cache.yaml")
@@ -131,12 +133,12 @@ class MicrAnt:
                 "name": "Output",
                 "type": "group",
                 "children": [
-                    {
-                        "name": "Directory Path",
-                        "type": "str",
-                        "value": self._prepare_default_output_dir(),
-                    },
-                    {"name": "Select", "type": "action"},
+                    # {
+                    #     "name": "Directory Path",
+                    #     "type": "str",
+                    #     "value": self._prepare_default_output_dir(),
+                    # },
+                    # {"name": "Select", "type": "action"},
                     {
                         "name": "Common Spreadsheet File",
                         "type": "str",
@@ -153,7 +155,7 @@ class MicrAnt:
                 "name": "Annotation",
                 "type": "group",
                 "children": [
-                    {"name": "Annotated Parameter", "type": "str", "value": "",},
+                    {"name": "Annotated Parameter", "type": "str", "value": "", "color":"#FFFF00"},
                     {"name": "Upper Threshold", "type": "float", "value": 2},
                     {"name": "Lower Threshold", "type": "float", "value": 0},
                 ],
@@ -163,6 +165,7 @@ class MicrAnt:
                 "type": "group",
                 "children": [
                     {"name": "Image Level", "type": "int", "value": 2},
+                    self.intensity_rescale.parameters,
                     # {'name': 'Directory Path', 'type': 'str', 'value': prepare_default_output_dir()},
                     # {
                     #     "name": "Show",
@@ -170,12 +173,12 @@ class MicrAnt:
                     #     "value": False,
                     #     "tip": "Show images",
                     # },
-                    {
-                        "name": "Open output dir",
-                        "type": "bool",
-                        "value": False,
-                        "tip": "Open system window with output dir when processing is finished",
-                    },
+                    # {
+                    #     "name": "Open output dir",
+                    #     "type": "bool",
+                    #     "value": False,
+                    #     "tip": "Open system window with output dir when processing is finished",
+                    # },
                     # {
                     #     "name": "Run Scan Segmentation",
                     #     "type": "bool",
@@ -207,27 +210,61 @@ class MicrAnt:
                     },
                 ],
             },
-            {
-                "name": "Set Left",
-                "type": "action",
-                "tip": "Set parameter value of left image and show next couple",
-            },
-            {
-                "name": "New Parameter Value",
-                "type": "float",
-                "value": 0,
-                "tip": "Used when Set Left is clicked",
-            },
-            {
-                "name": "Left is lower",
-                "type": "action",
-                "tip": "Annotated parameter on left image is lower than on right image",
-            },
-            {
-                "name": "Right is lower",
-                "type": "action",
-                "tip": "Annotated parameter on right image is lower than on left image",
-            },
+            { "name": "Left Image Annotation",
+              "type": "group",
+              "tip": "Direct annotation of left image",
+              "children": [
+                {
+                    "name": "New Parameter Value",
+                    "type": "float",
+                    "value": 0,
+                    "tip": "Used when Set Left is clicked",
+                },
+                {
+                    "name": "Set Left",
+                    "type": "action",
+                    "tip": "Set parameter value of left image and show next couple",
+                },
+                {
+                    "name": "Set Left 0%",
+                    "type": "action",
+                    "tip": "Set parameter value of left image and show next couple",
+                },
+                {
+                    "name": "Set Left 25%",
+                    "type": "action",
+                    "tip": "Set parameter value of left image and show next couple",
+                },
+                {
+                    "name": "Set Left 50%",
+                    "type": "action",
+                    "tip": "Set parameter value of left image and show next couple",
+                },
+                {
+                    "name": "Set Left 75%",
+                    "type": "action",
+                    "tip": "Set parameter value of left image and show next couple",
+                },
+                {
+                    "name": "Set Left 100%",
+                    "type": "action",
+                    "tip": "Set parameter value of left image and show next couple",
+                },
+            ]},
+            { "name": "Comparative Annotation",
+              "type": "group",
+              "children": [
+                {
+                    "name": "Left is lower",
+                    "type": "action",
+                    "tip": "Annotated parameter on left image is lower than on right image",
+                },
+                {
+                    "name": "Right is lower",
+                    "type": "action",
+                    "tip": "Annotated parameter on right image is lower than on left image",
+                },
+            ]},
             {"name": "Save", "type": "action"},
             # {"name": "Run", "type": "action"},
             # {'name': 'Numerical Parameter Options', 'type': 'group', 'children': [
@@ -254,6 +291,11 @@ class MicrAnt:
         self._right_is_lower_callback = None
         self._left_is_lower_callback = None
 
+        self._img1 = None
+        self._row1 = None
+        self._img2 = None
+        self._row2 = None
+
     def set_parameter(self, param_path, value, parse_path=True):
         """
         Set value to parameter.
@@ -275,7 +317,7 @@ class MicrAnt:
             default_dir = op.expanduser("~")
 
         # timestamp = datetime.datetime.now().strftime("SA_%Y-%m-%d_%H:%M:%S")
-        timestamp = datetime.datetime.now().strftime("SA_%Y%m%d_%H%M%S")
+        timestamp = datetime.datetime.now().strftime("MA_%Y%m%d_%H%M%S")
         default_dir = op.join(default_dir, timestamp)
         return default_dir
 
@@ -371,8 +413,10 @@ class MicrAnt:
 
     def add_ndpi_file(self, filename: str):
         self.anim = image.AnnotatedImage(filename)
-        fnparam = self.parameters.param("Output", "Directory Path")
-        self.report.init_with_output_dir(fnparam.value())
+        self.intensity_rescale.set_anim_params(self.anim)
+        # fnparam = self.parameters.param("Output", "Directory Path").value()
+        fnparam = self._prepare_default_output_dir()
+        self.report.init_with_output_dir(fnparam)
         logger.debug(f"report output dir: {self.report.outputdir}")
         fn_spreadsheet = self.parameters.param("Output", "Common Spreadsheet File")
         self.report.additional_spreadsheet_fn = str(fn_spreadsheet.value())
@@ -421,7 +465,7 @@ class MicrAnt:
 
         # self.anim.annotations.
         fn = inpath.parts[-1]
-        fn_out = self.parameters.param("Output", "Directory Path").value()
+        # fn_out = self.parameters.param("Output", "Directory Path").value()
         self.report.add_cols_to_actual_row(
             {
                 "File Name": str(fn),
@@ -434,30 +478,32 @@ class MicrAnt:
                 "platform.node": platform.uname().node,
                 "platform.processor": platform.uname().processor,
                 "MicrAnt Version": micrant.__version__,
-                "Output Directory Path": str(fn_out),
+                # "Output Directory Path": str(fn_out),
             }
         )
         # self.report.add_cols_to_actual_row(self.parameters_to_dict())
 
         self.report.add_cols_to_actual_row(datarow)
 
-    def select_output_dir_gui(self):
-        from PyQt5 import QtWidgets
 
-        default_dir = self._prepare_default_output_dir()
-        if op.exists(default_dir):
-            start_dir = default_dir
-        else:
-            start_dir = op.dirname(default_dir)
-
-        fn = QtWidgets.QFileDialog.getExistingDirectory(
-            None,
-            "Select Output Directory",
-            directory=start_dir,
-            # filter="NanoZoomer Digital Pathology Image(*.ndpi)"
-        )
-        # print (fn)
-        self.set_output_dir(fn)
+    # def select_output_dir_gui(self):
+    #     logger.debug("Deprecated call")
+    #     from PyQt5 import QtWidgets
+    #
+    #     default_dir = self._prepare_default_output_dir()
+    #     if op.exists(default_dir):
+    #         start_dir = default_dir
+    #     else:
+    #         start_dir = op.dirname(default_dir)
+    #
+    #     fn = QtWidgets.QFileDialog.getExistingDirectory(
+    #         None,
+    #         "Select Output Directory",
+    #         directory=start_dir,
+    #         # filter="NanoZoomer Digital Pathology Image(*.ndpi)"
+    #     )
+    #     # print (fn)
+    #     self.set_output_dir(fn)
 
     def select_output_spreadsheet_gui(self):
         from PyQt5 import QtWidgets
@@ -501,6 +547,8 @@ class MicrAnt:
         colname = self.parameters.param("Annotation", "Annotated Parameter").value()
         logger.debug(f"common spreadsheet file = {xfn}")
         logger.debug(f"Annotated Parameter = {colname}")
+        if not Path(xfn).exists():
+            raise FileExistsError("There is no file for processing added")
         df = pd.read_excel(xfn)
         return imst.get_new_parameter_table(
             df,
@@ -562,6 +610,11 @@ class MicrAnt:
             # get the next item
 
             row, img, prev_row, prev_img = next(self.comparison_iterator)
+            self._img1 = img
+            self._row1 = row
+            self._img2 = prev_row
+            self._row2 = prev_row
+
             return row, prev_row
             # self.image1.imshow(img)
             # self.image2.imshow(prev_img)
@@ -572,15 +625,16 @@ class MicrAnt:
             return None, None
             # if StopIteration is raised, break from loop
 
-    def gui_left_is_lower(self):
-        row, prev_row = self.gui_show_next_image()
+    def gui_left_is_lower_and_show_next(self):
         if self._left_is_lower_callback != None:
-            self._left_is_lower_callback(row, prev_row)
+            self._left_is_lower_callback(self._row1, self._row2)
+        row, prev_row = self.gui_show_next_image()
 
-    def gui_right_is_lower(self):
-        prev_row, prev_prev_row = self.gui_show_next_image()
+    def gui_right_is_lower_and_show_next(self):
         if self._right_is_lower_callback != None:
-            self._right_is_lower_callback(prev_row, prev_prev_row)
+            # self._right_is_lower_callback(prev_row, prev_prev_row)
+            self._right_is_lower_callback(self._row1, self._row2)
+        prev_row, prev_prev_row = self.gui_show_next_image()
 
     def bubble_right_is_lower_callback(self, left_row, right_row):
         logger.debug(f"swap 1\n{left_row}")
@@ -600,15 +654,51 @@ class MicrAnt:
                 right_row, left_row, colname, add_offset=add2, multiplicator=multiplicator
             )
 
-    def gui_set_left_image(self):
-        prev_row, prev_prev_row = self.gui_show_next_image()
+    def gui_set_left_image_and_show_next(self):
         colname = self.parameters.param("Annotation", "Annotated Parameter").value()
-        value = self.parameters.param("Set Left").value()
+        value = self.parameters.param("Left Image Annotation", "New Parameter Value").value()
         self.add_std_data_to_row(
-            inpath=Path(prev_row["File Path"]), annotation_id=prev_row["Annotation ID"]
+            inpath=Path(self._row1["File Path"]), annotation_id=self._row1["Annotation ID"]
         )
         self.report.add_cols_to_actual_row({"Annotation Method": "set", colname: value})
         self.report.finish_actual_row()
+        prev_row, prev_prev_row = self.gui_show_next_image()
+
+    def set_left_in_percent(self, percent):
+        row = self._row1
+
+        colname = self.parameters.param("Annotation", "Annotated Parameter").value()
+        upper_threshold = self.parameters.param("Annotation", "Upper Threshold").value()
+        lower_threshold = self.parameters.param("Annotation", "Lower Threshold").value()
+
+        self.add_std_data_to_row(
+            inpath=Path(row["File Path"]), annotation_id=row["Annotation ID"]
+        )
+        value = lower_threshold + percent * 0.01 * (upper_threshold - lower_threshold)
+        self.report.add_cols_to_actual_row({"Annotation Method": "set", colname: value})
+        if colname in row:
+            value1 = row[colname]
+            self.report.add_cols_to_actual_row({"Former Annotation Parameter Value": value1})
+        self.report.finish_actual_row()
+
+    def gui_set_left_in_percent_and_show_next(self, percent):
+        self.set_left_in_percent(percent=percent)
+        prev_row, prev_prev_row = self.gui_show_next_image()
+
+    def gui_set_left_0_percent_and_show_next(self):
+        self.gui_set_left_in_percent_and_show_next(0)
+
+    def gui_set_left_25_percent_and_show_next(self):
+        self.gui_set_left_in_percent_and_show_next(25)
+
+    def gui_set_left_50_percent_and_show_next(self):
+        self.gui_set_left_in_percent_and_show_next(50)
+
+    def gui_set_left_75_percent_and_show_next(self):
+        self.gui_set_left_in_percent_and_show_next(75)
+
+    def gui_set_left_100_percent_and_show_next(self):
+        self.gui_set_left_in_percent_and_show_next(100)
 
     def _set_new_swap_value_for_first_row(self, row, prev_row, colname, add_offset=0, multiplicator=1.0):
 
@@ -715,6 +805,7 @@ class MicrAnt:
                 img = cache_data[cache_ids.index(row_id)]
             else:
                 anim = scaffan.image.AnnotatedImage(pth)
+                self.intensity_rescale.set_anim_params(anim)
                 img = imst.get_image_from_ann_id(anim, ann_id, level=level)
                 cache_ids.append(row_id)
                 cache_data.append(img)
@@ -725,9 +816,12 @@ class MicrAnt:
         for row_id1, row_id2 in self.couple_id_generator:  # couple_ids:
             level = self.parameters.param("Processing", "Image Level").value()
 
-
             row1, img1 = get_row_and_image(row_id1)
             row2, img2 = get_row_and_image(row_id2)
+            self._img1 = img1
+            self._row1 = row1
+            self._img2 = img2
+            self._row2 = row2
 
             # if prev_img is not None and actu_img is not None:
             if True:
@@ -786,18 +880,40 @@ class MicrAnt:
         self.parameters.param("Input", "Select").sigActivated.connect(
             self.select_file_gui
         )
-        self.parameters.param("Output", "Select").sigActivated.connect(
-            self.select_output_dir_gui
-        )
+        # self.parameters.param("Output", "Select").sigActivated.connect(
+        #     self.select_output_dir_gui
+        # )
         self.parameters.param(
             "Output", "Select Common Spreadsheet File"
         ).sigActivated.connect(self.select_output_spreadsheet_gui)
         self.parameters.param("Save").sigActivated.connect(self.run_lobuluses)
-        self.parameters.param("Left is lower").sigActivated.connect(
-            self.gui_left_is_lower
+        self.parameters.param("Comparative Annotation", "Left is lower").sigActivated.connect(
+            self.gui_left_is_lower_and_show_next
         )
-        self.parameters.param("Right is lower").sigActivated.connect(
-            self.gui_right_is_lower
+        self.parameters.param("Comparative Annotation", "Right is lower").sigActivated.connect(
+            self.gui_right_is_lower_and_show_next
+        )
+        self.parameters.param("Left Image Annotation", "Set Left").sigActivated.connect(
+            self.gui_set_left_image_and_show_next
+        )
+
+        self.parameters.param("Left Image Annotation", "Set Left 0%").sigActivated.connect(
+            self.gui_set_left_0_percent_and_show_next
+        )
+
+        self.parameters.param("Left Image Annotation", "Set Left 25%").sigActivated.connect(
+            self.gui_set_left_25_percent_and_show_next
+        )
+
+        self.parameters.param("Left Image Annotation", "Set Left 50%").sigActivated.connect(
+            self.gui_set_left_50_percent_and_show_next
+        )
+        self.parameters.param("Left Image Annotation", "Set Left 75%").sigActivated.connect(
+            self.gui_set_left_75_percent_and_show_next
+        )
+
+        self.parameters.param("Left Image Annotation", "Set Left 100%").sigActivated.connect(
+            self.gui_set_left_100_percent_and_show_next
         )
         self.parameters.param(
             "Annotation", "Annotated Parameter"
@@ -805,7 +921,7 @@ class MicrAnt:
             self.show_parameter_stats
         )
 
-        self.parameters.param("Processing", "Open output dir").setValue(True)
+        # self.parameters.param("Processing", "Open output dir").setValue(True)
         t = ParameterTree()
         t.setParameters(self.parameters, showTop=False)
         t.setWindowTitle("pyqtgraph example: Parameter Tree")
@@ -830,8 +946,17 @@ class MicrAnt:
         pic.show()
 
         self.image1 = PlotCanvas()
+        self.image1.axes.set_axis_off()
+        self.image1.imshow(plt.imread(logo_fn))
+
         # self.image1.plot()
         self.image2 = PlotCanvas()
+        self.image2.axes.text(0.1, 0.6, "Set Annotation Parameter")
+        self.image2.axes.text(0.1, 0.5, "Use Left Image Annotation (optimal in first iteration)")
+        self.image2.axes.text(0.1, 0.4, "or")
+        self.image2.axes.text(0.1, 0.3, "Use Comparative Annotation (optimal in further iterations)")
+        self.image2.axes.set_axis_off()
+        self.image2.draw()
         # self.image2.plot()
 
         # self.addToolBar(NavigationToolbar(self.image1, self))
@@ -870,17 +995,22 @@ class PlotCanvas(FigureCanvas):
         FigureCanvas.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Expanding)
         FigureCanvas.updateGeometry(self)
 
-        self.plot()
+        # self.plot()
         self.imshow_obj = None
 
-    def plot(self):
+    def plot(self, text=None, title=None):
 
-        data = [np.random.random() for i in range(25)]
         # ax = self.figure.add_subplot(111)
         ax = self.axes
         # ax = self.figure.add_subplot(111)
-        ax.plot(data, "r-")
-        ax.set_title("PyQt Matplotlib Example")
+        if text is not None:
+            ax.text(0.5, 0.5, "Set Annotation Parameter")
+        else:
+            data = [np.random.random() for i in range(25)]
+            ax.plot(data, "r-")
+        # ax.text(0.5, 0.5, "Set Annotation Parameter")
+        if title is not None:
+            ax.set_title("PyQt Matplotlib Example")
         self.draw()
 
     def imshow(self, *args, title="", **kwargs):

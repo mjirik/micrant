@@ -74,5 +74,12 @@ def test_just_create_next_image():
     mapp.set_parameter("Annotation;Lower Threshold", 0)
     mapp.set_parameter("Annotation;Upper Threshold", 2)
     logger.debug("before gui_next_image()")
-    mapp.gui_left_is_lower()
-    logger.debug("after gui_next_image()")
+    mapp.gui_left_is_lower_and_show_next()
+    assert len(mapp.report.df) == 0
+
+    mapp.gui_right_is_lower_and_show_next()
+    assert len(mapp.report.df) == 2
+
+    mapp.gui_set_left_75_percent_and_show_next()
+    assert len(mapp.report.df) == 3
+    assert mapp.report.df["SNI"].iat[2] == 1.5
