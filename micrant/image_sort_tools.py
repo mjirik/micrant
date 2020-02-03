@@ -75,34 +75,34 @@ def get_image_from_ann_id(anim: scaffan.image.AnnotatedImage, ann_id, level):
     return img
 
 
-def generate_images(unique_df):
-    anim = None
-    prev_pth = ""
-    for index, row in unique_df.iterrows():
-        pth = row["File Path"]
-        if prev_pth != pth:
-            anim = scaffan.image.AnnotatedImage(pth)
-        img = get_image_from_ann_id(anim, row["Annotation ID"])
-        prev_pth = pth
-        yield row, img
-
-
-def generate_image_couples(unique_df):
-    anim = None
-    prev_pth = ""
-    prev_row = None
-    prev_img = None
-    for index, row in unique_df.iterrows():
-        pth = row["File Path"]
-        if prev_pth != pth:
-            anim = scaffan.image.AnnotatedImage(pth)
-        ann_id = row["Annotation ID"]
-        img = get_image_from_ann_id(anim, ann_id)
-        if prev_row is not None:
-            yield row, img, prev_row, prev_img
-        prev_pth = pth
-        prev_row = row
-        prev_img = img
+# def generate_images(unique_df):
+#     anim = None
+#     prev_pth = ""
+#     for index, row in unique_df.iterrows():
+#         pth = row["File Path"]
+#         if prev_pth != pth:
+#             anim = scaffan.image.AnnotatedImage(pth)
+#         img = get_image_from_ann_id(anim, row["Annotation ID"])
+#         prev_pth = pth
+#         yield row, img
+#
+#
+# def generate_image_couples(unique_df):
+#     anim = None
+#     prev_pth = ""
+#     prev_row = None
+#     prev_img = None
+#     for index, row in unique_df.iterrows():
+#         pth = row["File Path"]
+#         if prev_pth != pth:
+#             anim = scaffan.image.AnnotatedImage(pth)
+#         ann_id = row["Annotation ID"]
+#         img = get_image_from_ann_id(anim, ann_id)
+#         if prev_row is not None:
+#             yield row, img, prev_row, prev_img
+#         prev_pth = pth
+#         prev_row = row
+#         prev_img = img
 
 
 def add_parameter_column(df, df_micrant, colname):
