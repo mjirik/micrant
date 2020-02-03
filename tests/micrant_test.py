@@ -54,7 +54,8 @@ def test_just_add_image():
     )
     mapp.set_common_spreadsheet_file(TEST_XLSX)
     mapp.set_annotation_color_selection("#0000FF")
-    mapp.set_input_file(fn)
+    # mapp.set_input_file(fn)
+    mapp.set_input_files([fn])
     # logger.debug("")
     assert TEST_XLSX.exists()
 
