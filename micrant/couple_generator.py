@@ -9,10 +9,10 @@ class QuickCoupleGenerator():
         self._abort = False
         pass
 
-    def first_is_lower(self):
+    def first_is_lower(self, left_row, right_row):
         self._first_is_lower = True
 
-    def first_is_higher(self):
+    def first_is_higher(self, left_row, right_row):
         self._first_is_lower = False
 
     def abort(self):
