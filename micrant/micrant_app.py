@@ -1010,20 +1010,21 @@ class PlotCanvas(FigureCanvas):
         # self.plot()
         self.imshow_obj = None
 
-    def plot(self, text=None, title=None):
-
-        # ax = self.figure.add_subplot(111)
-        ax = self.axes
-        # ax = self.figure.add_subplot(111)
-        if text is not None:
-            ax.text(0.5, 0.5, "Set Annotation Parameter")
-        else:
-            data = [np.random.random() for i in range(25)]
-            ax.plot(data, "r-")
-        # ax.text(0.5, 0.5, "Set Annotation Parameter")
-        if title is not None:
-            ax.set_title("PyQt Matplotlib Example")
-        self.draw()
+    # not used anymore
+    # def plot(self, text=None, title=None):
+    #
+    #     # ax = self.figure.add_subplot(111)
+    #     ax = self.axes
+    #     # ax = self.figure.add_subplot(111)
+    #     if text is not None:
+    #         ax.text(0.5, 0.5, "Set Annotation Parameter")
+    #     else:
+    #         data = [np.random.random() for i in range(25)]
+    #         ax.plot(data, "r-")
+    #     # ax.text(0.5, 0.5, "Set Annotation Parameter")
+    #     if title is not None:
+    #         ax.set_title("PyQt Matplotlib Example")
+    #     self.draw()
 
     def imshow(self, *args, title="", **kwargs):
         # data = [np.random.random() for i in range(25)]
@@ -1038,12 +1039,6 @@ class PlotCanvas(FigureCanvas):
         ax.set_title(title)
         self.draw()
 
-
-def get_col_from_ann_details(df, colname):
-    df[f"{colname}"] = pd.to_numeric(
-        df["Annotation Details"].str.extract(f"{colname}=" + r"(\d*\.?\d*)")[0]
-    )
-    return df
 
 
 class AllLobuliIterated(Exception):
