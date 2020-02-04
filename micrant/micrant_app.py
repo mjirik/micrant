@@ -295,6 +295,8 @@ class MicrAnt:
         self._row1 = None
         self._img2 = None
         self._row2 = None
+        # self.couple_selection_strategy = "quick"
+        self.couple_selection_strategy = "bubble"
 
     def set_parameter(self, param_path, value, parse_path=True):
         """
@@ -584,9 +586,9 @@ class MicrAnt:
         self.unique_df = unique_df
         self.colname = colname
         ln = len(unique_df)
-        method = 'bubble'
+        couple_selection_strategy = self.couple_selection_strategy
         # method = 'quick'
-        if method == "bubble":
+        if couple_selection_strategy == "bubble":
 
             # couple_ids = list(zip(range(0, ln - 1), range(1, ln)))
             couple_ids = zip(range(0, ln - 1), range(1, ln))
@@ -594,13 +596,13 @@ class MicrAnt:
             self.comparison_iterator = self.show_image_couples_generator()
             self._right_is_lower_callback = self.bubble_right_is_lower_callback
             self._left_is_lower_callback = None
-        elif method == "quick":
+        elif couple_selection_strategy == "quick":
             id_array = list(range(0, len(unique_df)))
             self._quick_couple_generator = couple_generator.QuickCoupleGenerator(id_array)
             self.couple_id_generator = self._quick_couple_generator.image_couple_generator()
             self.comparison_iterator = self.show_image_couples_generator()
-            self._right_is_lower_callback = self._quick_couple_generator.first_is_lower()
-            self._left_is_lower_callback = self._quick_couple_generator.first_is_higher()
+            self._right_is_lower_callback = self._quick_couple_generator.first_is_lower
+            self._left_is_lower_callback = self._quick_couple_generator.first_is_higher
         else:
             raise ValueError("Unknown couple selection method")
         self._comparison_parameter_var = unique_df[colname].var()
