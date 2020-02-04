@@ -148,13 +148,13 @@ def nogui(input_path, color, common_xlsx, log_level, params, print_params):
         f"input path={input_path} color={color}, output_path={common_xlsx}, params={params}"
     )
     mainapp = micrant_app.MicrAnt()
+    logger.debug(f"Micrant created")
+    app_tools.set_parameters_by_path(mainapp.parameters, params)
     if print_params:
         import pprint
 
-        pprint.pprint(mainapp.parameters_to_dict())
+        pprint.pprint(app_tools.params_and_values(mainapp.parameters))
         exit()
-    logger.debug(f"Micrant created")
-    app_tools.set_parameters_by_path(mainapp.parameters, params)
     # for param in params:
     #     logger.debug(f"param={param}")
     #     mainapp.parameters.param(*param[0].split(";")).setValue(ast.literal_eval(param[1]))
