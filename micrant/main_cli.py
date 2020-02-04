@@ -75,13 +75,13 @@ def set(common_spreadsheet_file=None):
 @click.option("--print-params", "-pp", is_flag=True, help="Print parameters")
 def gui(params, print_params):
     mainapp = micrant_app.MicrAnt()
+    app_tools.set_parameters_by_path(mainapp.parameters, params)
     if print_params:
         import pprint
-
-        pprint.pprint(mainapp.parameters_to_dict())
+        pprint.pprint(app_tools.params_and_values(mainapp.parameters))
         exit()
-    for param in params:
-        mainapp.set_parameter(param[0], value=ast.literal_eval(param[1]))
+    # for param in params:
+    #     mainapp.set_parameter(param[0], value=ast.literal_eval(param[1]))
         # mainapp.parameters.param(*param[0].split(";")).setValue(ast.literal_eval(param[1]))
     mainapp.start_gui()
 
