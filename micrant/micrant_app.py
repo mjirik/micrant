@@ -638,11 +638,13 @@ class MicrAnt:
             # if StopIteration is raised, break from loop
 
     def gui_left_is_lower_and_show_next(self):
+        self._check_annotation_param_for_gui()
         if self._left_is_lower_callback != None:
             self._left_is_lower_callback(self._row1, self._row2)
         row, prev_row = self.gui_show_next_image()
 
     def gui_right_is_lower_and_show_next(self):
+        self._check_annotation_param_for_gui()
         if self._right_is_lower_callback != None:
             # self._right_is_lower_callback(prev_row, prev_prev_row)
             self._right_is_lower_callback(self._row1, self._row2)
@@ -693,7 +695,13 @@ class MicrAnt:
             self.report.add_cols_to_actual_row({"Former Annotation Parameter Value": value1})
         self.report.finish_actual_row()
 
+    def _check_annotation_param_for_gui(self):
+        if str(self.parameters.param("Annotation", "Annotated Parameter").value()) == "":
+            raise NoAnnotationParameter("Annotation Parameter required.")
+
     def gui_set_left_in_percent_and_show_next(self, percent):
+        self._check_annotation_param_for_gui()
+
         self.set_left_in_percent(percent=percent)
         prev_row, prev_prev_row = self.gui_show_next_image()
 
@@ -1042,4 +1050,7 @@ class PlotCanvas(FigureCanvas):
 
 
 class AllLobuliIterated(Exception):
+    pass
+
+class NoAnnotationParameter(Exception):
     pass
