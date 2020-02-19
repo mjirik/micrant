@@ -9,7 +9,7 @@
 Annotation of microscopic data for image processing by comparing two images.
 
 
-![graphics](graphics/micrant_screenshot01.png)
+![graphics](graphics/micrant_screenshot01.PNG)
 
 
 # Install
