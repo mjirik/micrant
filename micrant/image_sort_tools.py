@@ -13,14 +13,30 @@ def get_col_from_ann_details(df, colname):
 
 
 def get_new_parameter_table(
-    df: pd.DataFrame, colname, rewrite_annotated_parameter_with_recent=False, add_noise=False
+    df: pd.DataFrame, colname, rewrite_annotated_parameter_with_recent=False, add_noise=False, recent_method="last"
 ):
+    """
+
+    :param df: datafram with columns
+    :param colname: name of column with parameter
+    :param rewrite_annotated_parameter_with_recent: the
+    :param add_noise: add noise with normal distribution and sigma=
+    :param recent_method: how is selected recent value. It can be function or string i.e. 'last', 'first', np.mean
+    :return:
+    """
     # unique_df = df.drop_duplicates(subset=["File Name", "Annotation ID"], keep="first")
     # unique_df.keys()
     df_all_with_param = get_parameter_from_df(df, colname)
-    unique_df2 = df_all_with_param.groupby(["Annotation ID", "File Name"]).agg(
+    unique_df2 = df_all_with_param.sort_index().groupby(["Annotation ID", "File Name"]).agg(
         {
-            colname: {"recent": np.mean, "var": np.var, "count": "count"},
+            colname: (
+                ("recent", recent_method),
+                ("mean", np.mean),
+                ("var", np.var),
+                ("count", "count"),
+                ("last", "last"),
+                ("first", "first")
+            ),
             "File Path": "last",
         }
     )

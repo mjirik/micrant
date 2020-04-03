@@ -18,6 +18,7 @@ path_to_script = op.dirname(op.abspath(__file__))
 pth = op.join(path_to_script, "../../scaffan/")
 sys.path.insert(0, pth)
 
+
 def inc(x):
     return x + 1
 
@@ -166,3 +167,4 @@ def test_annotation_set_value():
     mapp.save_data()
     df2 = pd.read_excel(TEST_XLSX)
     assert len(df1) < len(df2)
+

@@ -71,7 +71,7 @@ class MicrAnt:
         # self.glcm_textures.set_report(self.report)
         # self.skeleton_analysis.set_report(self.report)
         # self.evaluation.report = self.report
-        self.intensity_rescale = image_intensity_rescale_pyqtgraph.RescaleIntensityPercentilePQG()
+        self.intensity_rescale = image_intensity_rescale_pyqtgraph.RescaleIntensityPercentilePQG(pvalue=True)
         self.win: QtGui.QWidget = None
         # self.win = None
         self.cache = cachefile.CacheFile("~/.micrant_cache.yaml")
@@ -577,11 +577,11 @@ class MicrAnt:
         colname = self.parameters.param("Annotation", "Annotated Parameter").value()
         upper_threshold = self.parameters.param("Annotation", "Upper Threshold").value()
         lower_threshold = self.parameters.param("Annotation", "Lower Threshold").value()
-        unique_df2 = unique_df2[(unique_df2[colname] > lower_threshold) &(unique_df2[colname] < upper_threshold)]
+        unique_df2 = unique_df2[(unique_df2[colname] >= lower_threshold) &(unique_df2[colname] <= upper_threshold)]
         return unique_df2, colname, lower_threshold, upper_threshold
 
-
     def init_comparison(self):
+        logger.debug("init comparison")
         unique_df, colname, _, _= self._annotated_param_and_thr_dataframe_subselection()
         self.unique_df = unique_df
         self.colname = colname
@@ -693,6 +693,7 @@ class MicrAnt:
         if colname in row:
             value1 = row[colname]
             self.report.add_cols_to_actual_row({"Former Annotation Parameter Value": value1})
+        logger.debug(f"new val={value}, old={value1}, {Path(row['File Path']).stem}, {row['Annotation ID']}")
         self.report.finish_actual_row()
 
     def _check_annotation_param_for_gui(self):
@@ -728,6 +729,7 @@ class MicrAnt:
         self.add_std_data_to_row(
             inpath=Path(row["File Path"]), annotation_id=row["Annotation ID"]
         )
+        logger.debug(f"new val={v1new}, old={value1}, {Path(row['File Path']).stem}, {row['Annotation ID']}")
         self.report.add_cols_to_actual_row(
             {
                 # "Annotation Color": self.parameters.param(
