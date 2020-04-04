@@ -590,16 +590,20 @@ class MicrAnt:
         # method = 'quick'
         if couple_selection_strategy == "bubble":
 
-            # couple_ids = list(zip(range(0, ln - 1), range(1, ln)))
             couple_ids = zip(range(0, ln - 1), range(1, ln))
-            self.couple_id_generator = couple_ids
+            self.values = list(unique_df[colname])
+            self.couple_generator = couple_generator.BubbleCoupleGenerator(ids=list(range(0, ln)))
+            self._bubble_couple_generator = self.couple_generator
+            # self.couple_id_generator = couple_ids
+            self.couple_id_generator = self.couple_generator.image_couple_generator()
             self.comparison_iterator = self.show_image_couples_generator()
             self._right_is_lower_callback = self.bubble_right_is_lower_callback
             self._left_is_lower_callback = None
         elif couple_selection_strategy == "quick":
             id_array = list(range(0, len(unique_df)))
-            self._quick_couple_generator = couple_generator.QuickCoupleGenerator(id_array)
-            self.couple_id_generator = self._quick_couple_generator.image_couple_generator()
+            self.couple_generator = couple_generator.QuickCoupleGenerator(id_array)
+            self._quick_couple_generator = self.couple_generator
+            self.couple_id_generator = self.couple_generator.image_couple_generator()
             self.comparison_iterator = self.show_image_couples_generator()
             self._right_is_lower_callback = self._quick_couple_generator.first_is_lower
             self._left_is_lower_callback = self._quick_couple_generator.first_is_higher
@@ -648,6 +652,20 @@ class MicrAnt:
         if self._right_is_lower_callback != None:
             # self._right_is_lower_callback(prev_row, prev_prev_row)
             self._right_is_lower_callback(self._row1, self._row2)
+            # if output is not None:
+            #     colname = self.parameters.param("Annotation", "Annotated Parameter").value()
+            #     # add1 = np.random.rand() * 0.2 * (self._comparison_parameter_std)
+            #     # add2 = -np.random.rand() * 0.2 * (self._comparison_parameter_std)
+            #     add1 = 0.
+            #     add2 = 0.
+            #     left_row, right_row, multiplicator = output
+            #     self._set_new_swap_value_for_first_row(
+            #         left_row, right_row, colname, add_offset=add1, multiplicator=multiplicator
+            #     )
+            #     self._set_new_swap_value_for_first_row(
+            #         right_row, left_row, colname, add_offset=add2, multiplicator=multiplicator
+            #     )
+
         prev_row, prev_prev_row = self.gui_show_next_image()
 
     def bubble_right_is_lower_callback(self, left_row, right_row):
@@ -658,15 +676,26 @@ class MicrAnt:
             colname = self.parameters.param("Annotation", "Annotated Parameter").value()
             # add1 = np.random.rand() * 0.2 * (self._comparison_parameter_std)
             # add2 = -np.random.rand() * 0.2 * (self._comparison_parameter_std)
+            i, j = self._bubble_couple_generator.first_is_higher()
             add1=0.
             add2=0.
-            multiplicator = 0.5 + 0.5 * np.random.rand()
-            self._set_new_swap_value_for_first_row(
-                left_row, right_row, colname, add_offset=add1, multiplicator=multiplicator
-            )
-            self._set_new_swap_value_for_first_row(
-                right_row, left_row, colname, add_offset=add2, multiplicator=multiplicator
-            )
+            multiplicator = 0.5 * np.random.rand()
+            old_value1 = self.values[i]
+            old_value2 = self.values[j]
+            new_value1 = self._get_new_val(old_value1, old_value2, multiplicator=multiplicator)
+            new_value2 = self._get_new_val(old_value2, old_value1, multiplicator=multiplicator)
+            logger.debug(f"old and new: v1={old_value1}, {new_value1}, v2={old_value2}, {new_value2}")
+
+            self._set_new_value_for_row(left_row, colname, new_value1, compared_row=right_row)
+            self._set_new_value_for_row(right_row, colname, new_value2, compared_row=left_row)
+
+            # multiplicator_big = 0.5 + 0.5 * np.random.rand()
+            # self._set_new_swap_value_for_first_row(
+            #     left_row, right_row, colname, add_offset=add1, multiplicator=multiplicator_big
+            # )
+            # self._set_new_swap_value_for_first_row(
+            #     right_row, left_row, colname, add_offset=add2, multiplicator=multiplicator_big
+            # )
 
     def gui_set_left_image_and_show_next(self):
         colname = self.parameters.param("Annotation", "Annotated Parameter").value()
@@ -721,28 +750,50 @@ class MicrAnt:
     def gui_set_left_100_percent_and_show_next(self):
         self.gui_set_left_in_percent_and_show_next(100)
 
+    def _get_new_val(self, value1, value2, add_offset=0, multiplicator=1.0):
+        v1new = value1 + ((value2 - value1) * multiplicator) + add_offset
+        return v1new
+
     def _set_new_swap_value_for_first_row(self, row, prev_row, colname, add_offset=0, multiplicator=1.0):
 
         value1 = row[colname]
         value2 = prev_row[colname]
-        v1new = value1 + ((value2 - value1) * multiplicator) + add_offset
+        v1new = self._get_new_val(value1, value2, add_offset=add_offset,multiplicator=multiplicator)
+        self._set_new_value_for_row(row, colname, v1new, prev_row)
+
+
+    def _set_new_value_for_row(self, row, colname, new_value, compared_row):
+        """
+        Set new value and document it
+        :param row:
+        :param colname:
+        :param new_value:
+        :param compared_row:
+        :return:
+        """
+        value1 = row[colname]
         self.add_std_data_to_row(
             inpath=Path(row["File Path"]), annotation_id=row["Annotation ID"]
         )
-        logger.debug(f"new val={v1new}, old={value1}, {Path(row['File Path']).stem}, {row['Annotation ID']}")
+        logger.debug(f"new val={new_value}, old={value1}, {Path(row['File Path']).stem}, {row['Annotation ID']}")
         self.report.add_cols_to_actual_row(
             {
                 # "Annotation Color": self.parameters.param(
                 #     "Input", "Annotation Color"
                 # ).value(),
+                colname: new_value,
                 "Annotation Method": "swap",
                 "Former Annotation Parameter Value": value1,
-                "Compared Annotation Parameter Value": value2,
-                colname: v1new,
-                "Compared Annotation File Path": str(Path(prev_row["File Path"])),
-                "Compared Annotation ID": prev_row["Annotation ID"]
-            }
-        )
+            })
+        # if prev_row is not None:
+        if True:
+            value2 = compared_row[colname]
+            self.report.add_cols_to_actual_row({
+                    "Compared Annotation Parameter Value": value2,
+                    "Compared Annotation File Path": str(Path(compared_row["File Path"])),
+                    "Compared Annotation ID": compared_row["Annotation ID"]
+                }
+            )
         self.report.finish_actual_row()
 
     # def run(self):
@@ -797,6 +848,34 @@ class MicrAnt:
         # )
         # self.image1.show()
 
+    def cache_clean(self):
+        # clean cache
+        logger.debug(f"cache size: {len(self.cache_ids)}")
+        while len(self.cache_ids) > self.cache_size:
+            self.cache_ids.pop(0)
+            self.cache_data.pop(0)
+
+    def get_row_and_image(self, row_id):
+        """
+        get row and image and save it to cache
+        :param row_id:
+        :return:
+        """
+        row = self.unique_df.iloc[row_id]
+
+        ann_id = row["Annotation ID"]
+        pth = row["File Path"]
+        if row_id in self.cache_ids:
+            img = self.cache_data[self.cache_ids.index(row_id)]
+        else:
+            level = self.parameters.param("Processing", "Image Level").value()
+            anim = scaffan.image.AnnotatedImage(pth)
+            self.intensity_rescale.set_anim_params(anim)
+            img = imst.get_image_from_ann_id(anim, ann_id, level=level)
+            self.cache_ids.append(row_id)
+            self.cache_data.append(img)
+        return row, img
+
     def show_image_couples_generator(self):
         """
         internally using couple id generator
@@ -814,32 +893,17 @@ class MicrAnt:
         # img2 = None
         # futu_row = None
         # futu_img = None
-        cache_size = 10
-        cache_ids = []
-        cache_data = []
+        self.cache_size = 10
+        self.cache_ids = []
+        self.cache_data = []
 
-        def get_row_and_image(row_id):
-            row = unique_df.iloc[row_id]
-
-            ann_id = row["Annotation ID"]
-            pth = row["File Path"]
-            if row_id in cache_ids:
-                img = cache_data[cache_ids.index(row_id)]
-            else:
-                anim = scaffan.image.AnnotatedImage(pth)
-                self.intensity_rescale.set_anim_params(anim)
-                img = imst.get_image_from_ann_id(anim, ann_id, level=level)
-                cache_ids.append(row_id)
-                cache_data.append(img)
-            return row, img
         # ln = len(unique_df)
         # couple_ids = list(zip(range(0, ln - 1), range(1, ln)))
         # for index, row in unique_df.iterrows():
         for row_id1, row_id2 in self.couple_id_generator:  # couple_ids:
-            level = self.parameters.param("Processing", "Image Level").value()
 
-            row1, img1 = get_row_and_image(row_id1)
-            row2, img2 = get_row_and_image(row_id2)
+            row1, img1 = self.get_row_and_image(row_id1)
+            row2, img2 = self.get_row_and_image(row_id2)
             self._img1 = img1
             self._row1 = row1
             self._img2 = img2
@@ -860,11 +924,12 @@ class MicrAnt:
                 self.qapp.processEvents()
                 logger.debug(f"left: {colname}={row1[colname]}")
                 logger.debug(f"right: {colname}={row2[colname]}")
+            # if hasattr(self.couple_id_generator
+            for prediction_id in self.couple_generator.prediction_ids:
+                # add image to cache
+                self.get_row_and_image(prediction_id)
 
-            logger.debug(f"cache size: {len(cache_ids)}")
-            while len(cache_ids) > cache_size:
-                cache_ids.pop(0)
-                cache_data.pop(0)
+            self.cache_clean()
             yield row1, img1, row2, img2
 
             # if prev_pth != pth:

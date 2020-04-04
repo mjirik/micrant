@@ -31,7 +31,6 @@ def test_parameter_extraction():
     default_dir = op.join(default_dir, "micrant_data.xlsx")
     df = pd.read_excel(default_dir)
 
-
     dfnew = imst.get_new_parameter_table(
         df,
         "SNI",
