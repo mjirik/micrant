@@ -164,7 +164,7 @@ class MicrAnt:
                 "name": "Processing",
                 "type": "group",
                 "children": [
-                    {"name": "Image Level", "type": "int", "value": 2},
+                    {"name": "Image Level", "type": "int", "value": 3},
                     self.intensity_rescale.parameters,
                     # {'name': 'Directory Path', 'type': 'str', 'value': prepare_default_output_dir()},
                     # {
@@ -679,16 +679,20 @@ class MicrAnt:
             i, j = self._bubble_couple_generator.first_is_higher()
             add1=0.
             add2=0.
+            # here we are just slightly mooving values
             multiplicator = 0.5 * np.random.rand()
             old_value1 = self.values[i]
             old_value2 = self.values[j]
             new_value1 = self._get_new_val(old_value1, old_value2, multiplicator=multiplicator)
             new_value2 = self._get_new_val(old_value2, old_value1, multiplicator=multiplicator)
+            self.values[i] = new_value1
+            self.values[j] = new_value2
             logger.debug(f"old and new: v1={old_value1}, {new_value1}, v2={old_value2}, {new_value2}")
 
             self._set_new_value_for_row(left_row, colname, new_value1, compared_row=right_row)
             self._set_new_value_for_row(right_row, colname, new_value2, compared_row=left_row)
 
+            # Here we are swapping the values
             # multiplicator_big = 0.5 + 0.5 * np.random.rand()
             # self._set_new_swap_value_for_first_row(
             #     left_row, right_row, colname, add_offset=add1, multiplicator=multiplicator_big
@@ -911,15 +915,16 @@ class MicrAnt:
 
             # if prev_img is not None and actu_img is not None:
             if True:
+                # TODO remove printing of values
                 self.image1.axes.clear()
                 self.image1.imshow(
                     img1,
-                    title=f"{row1['File Name']}, {row1['Annotation ID']}",
+                    title=f"{Path(row1['File Name']).stem}, {row1['Annotation ID']}, {self.values[row_id1]:.3}",
                 )
                 self.image2.axes.clear()
                 self.image2.imshow(
                     img2,
-                    title=f"{row2['File Name']}, {row2['Annotation ID']}",
+                    title=f"{Path(row2['File Name']).stem}, {row2['Annotation ID']}, {self.values[row_id2]:.3}",
                 )
                 self.qapp.processEvents()
                 logger.debug(f"left: {colname}={row1[colname]}")
