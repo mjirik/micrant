@@ -161,46 +161,20 @@ class MicrAnt:
                 ],
             },
             {
+                "name": "Preprocessing",
+                "type": "group",
+                "children": [
+                    {"name": "Add noise", "type": "bool", "value": True},
+                    {"name": "Use soft limits", "type": "bool", "value": True},
+                    {"name": "Run preprocessing", "type": "action", "tip":"should be safed after all"},
+                ],
+            },
+            {
                 "name": "Processing",
                 "type": "group",
                 "children": [
                     {"name": "Image Level", "type": "int", "value": 3},
                     self.intensity_rescale.parameters,
-                    # {'name': 'Directory Path', 'type': 'str', 'value': prepare_default_output_dir()},
-                    # {
-                    #     "name": "Show",
-                    #     "type": "bool",
-                    #     "value": False,
-                    #     "tip": "Show images",
-                    # },
-                    # {
-                    #     "name": "Open output dir",
-                    #     "type": "bool",
-                    #     "value": False,
-                    #     "tip": "Open system window with output dir when processing is finished",
-                    # },
-                    # {
-                    #     "name": "Run Scan Segmentation",
-                    #     "type": "bool",
-                    #     "value": True,
-                    #     "tip": "Run analysis of whole slide before all other processing is perfomed",
-                    # },
-                    # {
-                    #     "name": "Skeleton Analysis",
-                    #     "type": "bool",
-                    #     "value": True,
-                    #     # "tip": "Show images",
-                    # },
-                    # {
-                    #     "name": "Texture Analysis",
-                    #     "type": "bool",
-                    #     "value": True,
-                    #     # "tip": "Show images",
-                    # },
-                    # self.slide_segmentation.parameters,
-                    # self.lobulus_processing.parameters,
-                    # self.skeleton_analysis.parameters,
-                    # self.glcm_textures.parameters,
                     {
                         "name": "Report Level",
                         "type": "int",
@@ -568,6 +542,19 @@ class MicrAnt:
             rewrite_annotated_parameter_with_recent=rewrite_annotated_parameter_with_recent,
             add_noise=add_noise,
         )
+    def preprocessing(self):
+        unique_df2 = self.calculate_actual_annotated_parameter(
+            rewrite_annotated_parameter_with_recent=True, add_noise=False
+        )
+        # self.comparison_iterator = self.generate_image_couples(df_all_with_param)
+        colname = self.parameters.param("Annotation", "Annotated Parameter").value()
+        upper_threshold = self.parameters.param("Annotation", "Upper Threshold").value()
+        lower_threshold = self.parameters.param("Annotation", "Lower Threshold").value()
+        colname = self.parameters.param("Preprocessing", "Annotated Parameter").value()
+
+        comparison_parameter_std = unique_df2[colname].std()
+        self.values=list()
+
 
     def _annotated_param_and_thr_dataframe_subselection(self):
         unique_df2 = self.calculate_actual_annotated_parameter(
@@ -683,6 +670,10 @@ class MicrAnt:
             multiplicator = 0.5 * np.random.rand()
             old_value1 = self.values[i]
             old_value2 = self.values[j]
+            if old_value1 == old_value2:
+                delta = self._comparison_parameter_var * 0.05 * np.random.rand()
+                old_value1 = old_value1 - delta
+                logger.debug("no difference")
             new_value1 = self._get_new_val(old_value1, old_value2, multiplicator=multiplicator)
             new_value2 = self._get_new_val(old_value2, old_value1, multiplicator=multiplicator)
             self.values[i] = new_value1
@@ -1011,6 +1002,11 @@ class MicrAnt:
             "Annotation", "Annotated Parameter"
         ).sigValueChanged.connect(
             self.show_parameter_stats
+        )
+        self.parameters.param(
+            "Preprocessing", "Run preprocessing"
+        ).sigValueChanged.connect(
+            self.preprocessing
         )
 
         # self.parameters.param("Processing", "Open output dir").setValue(True)
