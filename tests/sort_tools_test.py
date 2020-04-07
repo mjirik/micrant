@@ -21,15 +21,15 @@ sys.path.insert(0, pth)
 from micrant import image_sort_tools as imst
 
 def test_parameter_extraction():
-    default_dir = io3d.datasets.join_path(get_root=True)
+    default_dir = Path(path_to_script)
+    # default_dir = io3d.datasets.join_path(get_root=True)
     # default_dir = op.expanduser("~/data")
-    if not op.exists(default_dir):
-        default_dir = op.expanduser("~")
+    # if not op.exists(default_dir):
+    #     default_dir = op.expanduser("~")
 
     # timestamp = datetime.datetime.now().strftime("SA_%Y-%m-%d_%H:%M:%S")
     # timestamp = datetime.datetime.now().strftime("SA_%Y%m%d_%H%M%S")
-    default_dir = op.join(default_dir, "micrant_data.xlsx")
-    df = pd.read_excel(default_dir)
+    df = pd.read_excel(default_dir / "micrant_data.xlsx")
 
     dfnew = imst.get_new_parameter_table(
         df,
@@ -37,5 +37,6 @@ def test_parameter_extraction():
         rewrite_annotated_parameter_with_recent=True,
         add_noise=False,
     )
-    print(dfnew[["SNI", "Annotation ID"]])
-    assert False
+    # print(dfnew[["SNI", "Annotation ID"]])
+    assert len(dfnew[["SNI", "Annotation ID"]]) > 0
+    # assert False
