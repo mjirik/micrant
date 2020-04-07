@@ -575,10 +575,10 @@ class MicrAnt:
         ln = len(unique_df)
         couple_selection_strategy = self.couple_selection_strategy
         # method = 'quick'
+        self.values = list(unique_df[colname])
         if couple_selection_strategy == "bubble":
 
             couple_ids = zip(range(0, ln - 1), range(1, ln))
-            self.values = list(unique_df[colname])
             self.couple_generator = couple_generator.BubbleCoupleGenerator(ids=list(range(0, ln)))
             self._bubble_couple_generator = self.couple_generator
             # self.couple_id_generator = couple_ids

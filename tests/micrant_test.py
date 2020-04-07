@@ -114,6 +114,14 @@ def test_annotation_left_right_and_write_data_quick_scheme():
     mapp.set_parameter("Annotation;Annotated Parameter", "SNI")
     mapp.set_parameter("Annotation;Lower Threshold", 0)
     mapp.set_parameter("Annotation;Upper Threshold", 2)
+
+    fn = io3d.datasets.join_path(
+        "medical", "orig", "sample_data", "SCP003", "SCP003.ndpi", get_root=True
+    )
+    mapp.set_annotation_color_selection("#0000FF")
+    mapp.set_input_files([fn])
+
+
     logger.debug("before gui_next_image()")
     # assert len(mapp.report.df) == 0
     mapp.gui_left_is_lower_and_show_next()
