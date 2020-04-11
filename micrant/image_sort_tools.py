@@ -31,9 +31,13 @@ def get_new_parameter_table(
     """
     # unique_df = df.drop_duplicates(subset=["File Name", "Annotation ID"], keep="first")
     # unique_df.keys()
-    if "Annotation Method" in df and "Annotation Details":
+    if "Annotation Details" in df:
+        if "Annotation Method" not in df:
+            df["Annotation Method"] = "nothing"
+        logger.debug(f"Creating column {colname} from Annotation Details")
         df_all_with_param = get_parameter_from_df(df, colname)
     else:
+        logger.debug("No Annotation Method or Annotation Details column")
         df_all_with_param = df.copy()
     unique_df2 = df_all_with_param.sort_index().groupby(["Annotation ID", "File Name"]).agg(
         {
