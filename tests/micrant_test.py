@@ -177,7 +177,7 @@ def test_annotation_set_value():
     assert len(df1) < len(df2)
 
 
-def test_use_new_parameter_image():
+def test_use_new_parameter():
     # qapp = QtWidgets.QApplication(sys.argv)
     qapp = global_qapp
     mapp = micrant.micrant_app.MicrAnt()
