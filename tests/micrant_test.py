@@ -176,3 +176,23 @@ def test_annotation_set_value():
     df2 = pd.read_excel(TEST_XLSX)
     assert len(df1) < len(df2)
 
+
+def test_use_new_parameter_image():
+    # qapp = QtWidgets.QApplication(sys.argv)
+    qapp = global_qapp
+    mapp = micrant.micrant_app.MicrAnt()
+    mapp.set_common_spreadsheet_file(TEST_XLSX)
+
+    xfn = mapp.parameters.param("Output", "Common Spreadsheet File").value()
+    logger.debug(f"Common Spreadsheet File {xfn}")
+    mapp.start_gui(skip_exec=True, qapp=qapp)
+    mapp.set_parameter("Annotation;Upper Threshold", 10)
+    mapp.set_parameter("Annotation;Lower Threshold", 0)
+    logger.debug("before gui_next_image()")
+    mapp.start_gui(skip_exec=True, qapp=qapp)
+    mapp.set_parameter("Annotation;Annotated Parameter", "newParam")
+    mapp.gui_left_is_lower_and_show_next()
+    mapp.gui_set_left_25_percent_and_show_next()
+    assert len(mapp.report.df) == 1
+    # print(mapp.report.df["newHOM"])
+    assert mapp.report.df["newParam"].loc[0] == 2.5
