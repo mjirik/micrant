@@ -83,6 +83,8 @@ class MicrAnt:
         logger.debug(
             "common_spreadsheet_file loaded as: {}".format(common_spreadsheet_file)
         )
+        outputdir = self._prepare_default_output_dir()
+        self.report.set_output_dir(outputdir)
         params = [
             {
                 "name": "Input",
@@ -133,22 +135,23 @@ class MicrAnt:
                 "name": "Output",
                 "type": "group",
                 "children": [
-                    # {
-                    #     "name": "Directory Path",
-                    #     "type": "str",
-                    #     "value": self._prepare_default_output_dir(),
-                    # },
-                    # {"name": "Select", "type": "action"},
                     {
                         "name": "Common Spreadsheet File",
                         "type": "str",
                         "value": common_spreadsheet_file,
+                        "tip": "All measurements are appended to this file."
                     },
                     {
                         "name": "Select Common Spreadsheet File",
                         "type": "action",
                         "tip": "All measurements are appended to this file in addition to data stored in Output Directory Path.",
                     },
+                    {
+                        "name": "Directory Path",
+                        "type": "str",
+                        "value": outputdir,
+                    },
+                    {"name": "Select Output Dir", "type": "action"},
                 ],
             },
             {
@@ -161,15 +164,15 @@ class MicrAnt:
                     {"name": "Lower Threshold", "type": "float", "value": 0, "tip": "Used for set by percent and for input filtering"},
                 ],
             },
-            {
-                "name": "Preprocessing",
-                "type": "group",
-                "children": [
-                    {"name": "Add noise", "type": "bool", "value": True},
-                    {"name": "Use soft limits", "type": "bool", "value": True},
-                    {"name": "Run preprocessing", "type": "action", "tip":"should be safed after all"},
-                ],
-            },
+            # {
+            #     "name": "Preprocessing",
+            #     "type": "group",
+            #     "children": [
+            #         # {"name": "Add noise", "type": "bool", "value": True},
+            #         # {"name": "Use soft limits", "type": "bool", "value": True},
+            #         # {"name": "Run preprocessing", "type": "action", "tip":"should be safed after all"},
+            #     ],
+            # },
             {
                 "name": "Processing",
                 "type": "group",
@@ -288,7 +291,7 @@ class MicrAnt:
         fnparam.setValue(value)
 
     def _prepare_default_output_dir(self):
-        default_dir = io3d.datasets.join_path(get_root=True)
+        default_dir = io3d.datasets.join_path("medical/processed/", get_root=True)
         # default_dir = op.expanduser("~/data")
         if not op.exists(default_dir):
             default_dir = op.expanduser("~")
@@ -299,7 +302,7 @@ class MicrAnt:
         return default_dir
 
     def _prepare_default_output_common_spreadsheet_file(self):
-        default_dir = io3d.datasets.join_path(get_root=True)
+        default_dir = io3d.datasets.join_path("medical/processed/", get_root=True)
         # default_dir = op.expanduser("~/data")
         if not op.exists(default_dir):
             default_dir = op.expanduser("~")
@@ -391,8 +394,8 @@ class MicrAnt:
     def add_ndpi_file(self, filename: str):
         self.anim = image.AnnotatedImage(filename)
         self.intensity_rescale.set_anim_params(self.anim)
-        # fnparam = self.parameters.param("Output", "Directory Path").value()
-        fnparam = self._prepare_default_output_dir()
+        fnparam = self.parameters.param("Output", "Directory Path").value()
+        # fnparam = self._prepare_default_output_dir()
         self.report.init_with_output_dir(fnparam)
         logger.debug(f"report output dir: {self.report.outputdir}")
         fn_spreadsheet = self.parameters.param("Output", "Common Spreadsheet File")
@@ -435,6 +438,14 @@ class MicrAnt:
         filename = str(excel_path)
         logger.debug(f"Saving to excel file: {filename}")
         exsu.report.append_df_to_excel(filename, self.report.df)
+        # read again the output report file and get new df
+        df  = self.calculate_actual_annotated_parameter(rewrite_annotated_parameter_with_recent=True)
+        # crete output dir if necessary
+        fn = self.report.join_output_dir("new_parameter_values.xlsx")
+        df.to_excel(fn)
+
+        odir = self._prepare_default_output_dir()
+        self.set_output_dir(odir)
         self.report.init()
 
     def add_std_data_to_row(self, inpath: Path, annotation_id):
@@ -464,24 +475,34 @@ class MicrAnt:
         self.report.add_cols_to_actual_row(datarow)
 
 
-    # def select_output_dir_gui(self):
-    #     logger.debug("Deprecated call")
-    #     from PyQt5 import QtWidgets
-    #
-    #     default_dir = self._prepare_default_output_dir()
-    #     if op.exists(default_dir):
-    #         start_dir = default_dir
-    #     else:
-    #         start_dir = op.dirname(default_dir)
-    #
-    #     fn = QtWidgets.QFileDialog.getExistingDirectory(
-    #         None,
-    #         "Select Output Directory",
-    #         directory=start_dir,
-    #         # filter="NanoZoomer Digital Pathology Image(*.ndpi)"
-    #     )
-    #     # print (fn)
-    #     self.set_output_dir(fn)
+    def select_output_dir_gui(self):
+        # logger.debug("Deprecated call")
+        from PyQt5 import QtWidgets
+
+        default_dir = self._prepare_default_output_dir()
+        if op.exists(default_dir):
+            start_dir = default_dir
+        else:
+            start_dir = op.dirname(default_dir)
+
+        fn = QtWidgets.QFileDialog.getExistingDirectory(
+            None,
+            "Select Output Directory",
+            directory=start_dir,
+            # filter="NanoZoomer Digital Pathology Image(*.ndpi)"
+        )
+        # print (fn)
+        self.set_output_dir(fn)
+
+    def set_output_dir(self, fn):
+        odir = str(fn)
+        self.parameters.param("Output", "Directory Path").setValue(odir)
+
+    def _on_output_dir_change(self):
+        odir = str(self.parameters.param("Output", "Directory Path").value())
+
+        self.report.set_output_dir(odir)
+        # self.report.init_with_output_dir(odir)
 
     def select_output_spreadsheet_gui(self):
         from PyQt5 import QtWidgets
@@ -827,7 +848,7 @@ class MicrAnt:
         # self.image1.draw()
         import seaborn as sns
         if df[colname].notna().sum() > 2:
-            sns.distplot(df[colname], ax=ax, norm_hist=False)
+            sns.distplot(df[df[colname].notna()][colname], ax=ax, norm_hist=False)
             self.image1.draw()
 
             # image 2
@@ -840,9 +861,9 @@ class MicrAnt:
             ax.autoscale_view(True, True, True)
             # self.image1.draw()
             import seaborn as sns
-            print("df: ", df)
-            logger.debug(f"len df: {len(df)}")
-            sns.boxplot(data=df, x=colname, y="File Name", ax=ax, orient="h")
+            # print("df: ", df[df[colname].notna()])
+            logger.debug(f"len df: {len(df[df[colname].notna()])}")
+            sns.boxplot(data=df[df[colname].notna()], x=colname, y="File Name", ax=ax, orient="h")
             self.image2.draw()
         # df[colname].hist(
             # ax=self.image1.axes
@@ -969,9 +990,9 @@ class MicrAnt:
         self.parameters.param("Input", "Select").sigActivated.connect(
             self.select_file_gui
         )
-        # self.parameters.param("Output", "Select").sigActivated.connect(
-        #     self.select_output_dir_gui
-        # )
+        self.parameters.param("Output", "Select Output Dir").sigActivated.connect(
+            self.select_output_dir_gui
+        )
         self.parameters.param(
             "Output", "Select Common Spreadsheet File"
         ).sigActivated.connect(self.select_output_spreadsheet_gui)
@@ -1010,10 +1031,16 @@ class MicrAnt:
             self.show_parameter_stats
         )
         self.parameters.param(
-            "Preprocessing", "Run preprocessing"
+            "Output", "Directory Path"
+
         ).sigValueChanged.connect(
-            self.preprocessing
+            self._on_output_dir_change
         )
+        # self.parameters.param(
+        #     "Preprocessing", "Run preprocessing"
+        # ).sigValueChanged.connect(
+        #     self.preprocessing
+        # )
 
         # self.parameters.param("Processing", "Open output dir").setValue(True)
         t = ParameterTree()

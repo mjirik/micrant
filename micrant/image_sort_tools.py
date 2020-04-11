@@ -24,7 +24,7 @@ def get_new_parameter_table(
 
     :param df: datafram with columns
     :param colname: name of column with parameter
-    :param rewrite_annotated_parameter_with_recent: the
+    :param rewrite_annotated_parameter_with_recent: if true, column named by parameter is rewriten by columne {colname + " recent"}
     :param add_noise: add noise with normal distribution and sigma=
     :param recent_method: how is selected recent value. It can be function or string i.e. 'last', 'first', np.mean
     :return:
