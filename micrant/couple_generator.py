@@ -97,8 +97,9 @@ class BubbleCoupleGenerator():
         for i in range(ln - 1):
             self._i = i
             # what are the possible next ids? It is used for image cache preprocessing
-            self.prediction_ids = [self.ids[i+2]] if i < (ln - 2) else []
+            self.prediction_ids = [self.ids[i+2]] if i < (ln - 2) else [0]
             yield self.ids[i], self.ids[i + 1]
+        yield self.ids[0], self.ids[-1]
 
     def sort(self, array=[12, 4, 5, 6, 7, 3, 1, 15]):
         """Sort the array by using quicksort."""
