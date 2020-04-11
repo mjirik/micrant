@@ -6,9 +6,14 @@ import numpy as np
 
 
 def get_col_from_ann_details(df, colname):
-    df[f"{colname}"] = pd.to_numeric(
-        df["Annotation Details"].str.extract(f"{colname}=" + r"(\d*\.?\d*)")[0]
-    )
+    # new
+    # df.loc[f"{colname}", :] = pd.to_numeric(
+    #     df["Annotation Details"].str.extract(f"{colname}=" + r"(\d*\.?\d*)")[0]
+    # )
+    # old
+    values_as_strings = df["Annotation Details"].str.extract(f"{colname}=" + r"(\d*\.?\d*)")[0]
+    df[f"{colname}"] = pd.to_numeric( values_as_strings )
+
     return df
 
 
@@ -66,7 +71,7 @@ def get_parameter_from_df(df, colname):
     Pick up parameter for non processed data from Annotation Details and keep parameter column in all other rows.
     """
     df_nothing = get_col_from_ann_details(
-        df[df["Annotation Method"] == "nothing"], colname
+        df[df["Annotation Method"] == "nothing"].copy(), colname
     )
     df_not_nothing = df[df["Annotation Method"] != "nothing"]
     df_all_with_param = pd.concat(

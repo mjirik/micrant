@@ -156,8 +156,9 @@ class MicrAnt:
                 "type": "group",
                 "children": [
                     {"name": "Annotated Parameter", "type": "str", "value": "", "color":"#FFFF00"},
-                    {"name": "Upper Threshold", "type": "float", "value": 2},
-                    {"name": "Lower Threshold", "type": "float", "value": 0},
+                    {"name": "Input Threshold Filter", "type": "bool", "value": False, "tip": "Use the threshold values for input filtering"},
+                    {"name": "Upper Threshold", "type": "float", "value": 1, "tip": "Used for set by percent and for input filtering"},
+                    {"name": "Lower Threshold", "type": "float", "value": 0, "tip": "Used for set by percent and for input filtering"},
                 ],
             },
             {
@@ -563,7 +564,12 @@ class MicrAnt:
         colname = self.parameters.param("Annotation", "Annotated Parameter").value()
         upper_threshold = self.parameters.param("Annotation", "Upper Threshold").value()
         lower_threshold = self.parameters.param("Annotation", "Lower Threshold").value()
-        unique_df2 = unique_df2[(unique_df2[colname] >= lower_threshold) &(unique_df2[colname] <= upper_threshold)]
+        do_filtering = self.parameters.param("Annotation", "Input Threshold Filter").value()
+        if do_filtering:
+            unique_df2 = unique_df2[(unique_df2[colname] >= lower_threshold) &(unique_df2[colname] <= upper_threshold)]
+        if colname not in unique_df2:
+            # add column if it does not exist yet
+            unique_df2[colname] = None
         return unique_df2, colname, lower_threshold, upper_threshold
 
     def init_comparison(self):
@@ -820,23 +826,24 @@ class MicrAnt:
         ax.autoscale_view(True, True, True)
         # self.image1.draw()
         import seaborn as sns
-        sns.distplot(df[colname], ax=ax, norm_hist=False)
-        self.image1.draw()
+        if df[colname].notna().sum() > 2:
+            sns.distplot(df[colname], ax=ax, norm_hist=False)
+            self.image1.draw()
 
-        # image 2
-        ax = self.image2.axes
-        ax.clear()
-        # ax.hist(df[colname])
-        # ax.plot(data, "r-")
-        ax.set_title(f"Histogram of {colname}")
-        ax.relim()
-        ax.autoscale_view(True, True, True)
-        # self.image1.draw()
-        import seaborn as sns
-        print("df: ", df)
-        logger.debug(f"len df: {len(df)}")
-        sns.boxplot(data=df, x=colname, y="File Name", ax=ax, orient="h")
-        self.image2.draw()
+            # image 2
+            ax = self.image2.axes
+            ax.clear()
+            # ax.hist(df[colname])
+            # ax.plot(data, "r-")
+            ax.set_title(f"Histogram of {colname}")
+            ax.relim()
+            ax.autoscale_view(True, True, True)
+            # self.image1.draw()
+            import seaborn as sns
+            print("df: ", df)
+            logger.debug(f"len df: {len(df)}")
+            sns.boxplot(data=df, x=colname, y="File Name", ax=ax, orient="h")
+            self.image2.draw()
         # df[colname].hist(
             # ax=self.image1.axes
         # )
