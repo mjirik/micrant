@@ -31,7 +31,10 @@ def get_new_parameter_table(
     """
     # unique_df = df.drop_duplicates(subset=["File Name", "Annotation ID"], keep="first")
     # unique_df.keys()
-    df_all_with_param = get_parameter_from_df(df, colname)
+    if "Annotation Method" in df and "Annotation Details":
+        df_all_with_param = get_parameter_from_df(df, colname)
+    else:
+        df_all_with_param = df.copy()
     unique_df2 = df_all_with_param.sort_index().groupby(["Annotation ID", "File Name"]).agg(
         {
             colname: (
@@ -68,7 +71,7 @@ def get_new_parameter_table(
 
 def get_parameter_from_df(df, colname):
     """
-    Pick up parameter for non processed data from Annotation Details and keep parameter column in all other rows.
+    Sort dataframe and pick up parameter for non processed data from Annotation Details. Keep parameter column in all other rows.
     """
     df_nothing = get_col_from_ann_details(
         df[df["Annotation Method"] == "nothing"].copy(), colname
