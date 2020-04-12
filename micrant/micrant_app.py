@@ -439,10 +439,12 @@ class MicrAnt:
         logger.debug(f"Saving to excel file: {filename}")
         exsu.report.append_df_to_excel(filename, self.report.df)
         # read again the output report file and get new df
-        df  = self.calculate_actual_annotated_parameter(rewrite_annotated_parameter_with_recent=True)
+        colname = self.parameters.param("Annotation", "Annotated Parameter").value()
+        if colname != '':
+            df  = self.calculate_actual_annotated_parameter(rewrite_annotated_parameter_with_recent=True)
         # crete output dir if necessary
-        fn = self.report.join_output_dir("new_parameter_values.xlsx")
-        df.to_excel(fn)
+            fn = self.report.join_output_dir("new_parameter_values.xlsx")
+            df.to_excel(fn)
 
         odir = self._prepare_default_output_dir()
         self.set_output_dir(odir)

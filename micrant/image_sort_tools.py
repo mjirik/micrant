@@ -65,7 +65,7 @@ def get_new_parameter_table(
             / len(unique_df2)
         )
         noise = np.random.normal(0, sigma, len(unique_df2))
-        unique_df2[colname + " recent"] += noise
+        unique_df2[colname_recent] += noise
     unique_df2 = unique_df2.sort_values(by=colname_recent, ascending=True)
     if rewrite_annotated_parameter_with_recent:
         unique_df2[colname] = unique_df2[colname_recent]
